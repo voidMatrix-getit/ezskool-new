@@ -1,0 +1,12 @@
+<!--<svg width="14" height="17" viewBox="0 0 14 17" fill="none" xmlns="http://www.w3.org/2000/svg">-->
+<!--<path d="M7.125 2V1H12.25C12.6877 1 13 1.34441 13 1.7V15.3C13 15.6556 12.6877 16 12.25 16H1.75C1.31226 16 1 15.6556 1 15.3V10.3552L2.54972 9.33535L3.96944 8.40108L5.62144 9.36396L7.125 10.2403V8.5V2Z" fill="white" stroke="#494949" stroke-width="2"/>-->
+<!--</svg>-->
+
+<svg width="14" height="17" viewBox="0 0 14 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7.125 2V1H12.25C12.6877 1 13 1.34441 13 1.7V15.3C13 15.6556 12.6877 16 12.25 16H1.75C1.31226 16 1 15.6556 1 15.3V10.3552L2.54972 9.33535L3.96944 8.40108L5.62144 9.36396L7.125 10.2403V8.5V2Z" fill="white" stroke="#494949" stroke-width="2"/>
+    <!-- Adding top-left border and top half border -->
+    <path d="M0,0 L14,0" stroke="#494949" stroke-width="2"/>
+    <path d="M0,0 L0,17" stroke="#494949" stroke-width="2"/>
+</svg>
+
+

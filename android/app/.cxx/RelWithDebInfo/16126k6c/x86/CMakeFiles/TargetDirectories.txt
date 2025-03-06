@@ -1,0 +1,2 @@
+D:/Internship/EzskoolNew/ezskool/android/app/.cxx/RelWithDebInfo/16126k6c/x86/CMakeFiles/edit_cache.dir
+D:/Internship/EzskoolNew/ezskool/android/app/.cxx/RelWithDebInfo/16126k6c/x86/CMakeFiles/rebuild_cache.dir
