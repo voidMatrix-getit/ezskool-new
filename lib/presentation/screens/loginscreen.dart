@@ -1,6 +1,7 @@
 import 'package:ezskool/data/repo/auth_repo.dart';
 import 'package:ezskool/presentation/screens/signupscreen.dart';
 import 'package:ezskool/presentation/views/class_attendance/new_class_attendance_home_screen.dart';
+import 'package:ezskool/presentation/views/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -212,8 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    NewClassAttendanceHomeScreen()),
+                                builder: (context) => HomeScreen()),
                             (route) => false, // Removes all previous screens
                           );
                         } else {

@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 
 class ClassAttendanceHomeViewModel extends ChangeNotifier {
+  bool _isLoading = false;
+  bool initialized = false;
+
+  bool get isLoading => _isLoading;
+  bool get isInitialized => initialized;
+
+  void setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void setInitialized(bool init) {
+    initialized = init;
+    notifyListeners();
+  }
 
   List<String> divisions = [];
   String _selectedStandard = '';
@@ -11,7 +26,6 @@ class ClassAttendanceHomeViewModel extends ChangeNotifier {
 
   String _selectedDivision = '';
   String _selectedDate = '';
-
 
   String _selectedClass = '';
 
@@ -29,7 +43,6 @@ class ClassAttendanceHomeViewModel extends ChangeNotifier {
   String get selectedDate => _selectedDate;
 
   void updateClass(String className) {
-
     _selectedClass = className;
     notifyListeners();
   }
@@ -39,7 +52,7 @@ class ClassAttendanceHomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setDivisions(List<String> divisions){
+  void setDivisions(List<String> divisions) {
     this.divisions = divisions;
     notifyListeners();
   }

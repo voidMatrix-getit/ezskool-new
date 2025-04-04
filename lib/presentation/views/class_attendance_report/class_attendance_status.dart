@@ -5,6 +5,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:ezskool/core/services/logger.dart';
 import 'package:ezskool/data/repo/class_student_repo.dart';
 import 'package:ezskool/data/viewmodels/class_attendance/student_listing_viewmodel.dart';
+import 'package:ezskool/presentation/drawers/calendar_bottom_drawer.dart';
 import 'package:ezskool/presentation/views/base_screen.dart';
 import 'package:ezskool/presentation/views/class_attendance/new_class_attendance_home_screen.dart';
 import 'package:ezskool/presentation/widgets/custom_buttons.dart';
@@ -19,6 +20,7 @@ import 'package:provider/provider.dart';
 import '../../../../data/repo/student_repo.dart';
 
 class SelectorDropdownWidget extends StatelessWidget {
+  final String hint;
   final String text;
   final IconData leadingIcon;
   final List<String> items;
@@ -29,6 +31,7 @@ class SelectorDropdownWidget extends StatelessWidget {
 
   const SelectorDropdownWidget({
     super.key,
+    this.hint = '',
     this.text = "Select Option",
     this.leadingIcon = Icons.list,
     required this.items,
@@ -101,7 +104,7 @@ class SelectorDropdownWidget extends StatelessWidget {
           menuItemStyleData: MenuItemStyleData(
             padding: EdgeInsets.symmetric(horizontal: 8.w),
           ),
-          customButton: Container(
+          customButton: SizedBox(
             width: 342.w,
             height: 48.h,
             child: Stack(
@@ -113,7 +116,7 @@ class SelectorDropdownWidget extends StatelessWidget {
                   child: Icon(
                     leadingIcon,
                     size: 20.w,
-                    color: const Color(0xFFB8BCCA),
+                    color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
                   ),
                 ),
 
@@ -127,7 +130,8 @@ class SelectorDropdownWidget extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       fontSize: 14.sp,
                       height: 1.5,
-                      color: const Color(0xFF969AB8),
+                      color:
+                          text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
                       textBaseline: TextBaseline.alphabetic,
                     ),
                   ),
@@ -140,7 +144,7 @@ class SelectorDropdownWidget extends StatelessWidget {
                   child: Icon(
                     CupertinoIcons.chevron_down,
                     size: 20.w,
-                    color: const Color(0xFF969AB8),
+                    color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
                   ),
                 ),
               ],
@@ -153,12 +157,14 @@ class SelectorDropdownWidget extends StatelessWidget {
 }
 
 class SelectorWidget extends StatelessWidget {
+  final String hint;
   final String text;
   final IconData leadingIcon;
   final VoidCallback onTap;
 
   const SelectorWidget({
     super.key,
+    this.hint = '',
     this.text = "Select Date",
     this.leadingIcon = Icons.calendar_today,
     required this.onTap,
@@ -191,7 +197,7 @@ class SelectorWidget extends StatelessWidget {
               child: Icon(
                 leadingIcon,
                 size: 20.w,
-                color: const Color(0xFFB8BCCA),
+                color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
               ),
             ),
 
@@ -204,8 +210,8 @@ class SelectorWidget extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 14.sp,
-                  height: 1.5,
-                  color: const Color(0xFF969AB8),
+                  height: 1.5.h,
+                  color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
                   textBaseline: TextBaseline.alphabetic,
                 ),
               ),
@@ -218,7 +224,7 @@ class SelectorWidget extends StatelessWidget {
               child: Icon(
                 CupertinoIcons.chevron_down,
                 size: 20.w,
-                color: const Color(0xFF969AB8),
+                color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
               ),
             ),
           ],
@@ -330,6 +336,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SelectorWidget(
+                  hint: 'Select Date',
                   text: formattedDate ?? 'Select Date',
                   leadingIcon: Icons.date_range,
                   onTap: () {
@@ -353,7 +360,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                               setState(() {
                                 selectedDate = newDate;
                                 formattedDate = DateFormat('EEE, dd MMM, yyyy')
-                                    .format(selectedDate!);
+                                    .format(selectedDate);
                               });
                               // Reopen the filter dialog after date selection
 
@@ -375,6 +382,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                 SizedBox(height: 16.h),
                 SelectorDropdownWidget(
                   width: 250.0,
+                  hint: 'Select Shift',
                   text: selectedShift ?? "Select Shift",
                   leadingIcon: Icons.view_day_rounded,
                   items: shiftOptions,
@@ -398,6 +406,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                       backgroundColor: const Color(0xFFF5F5F5),
                       textColor: Color(0xFF494949),
                       onPressed: () {
+                        HapticFeedback.lightImpact();
                         Navigator.of(context).pop();
                       },
                     ),
@@ -408,13 +417,14 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                       text: 'Apply',
                       backgroundColor: const Color(0xFFED7902),
                       textColor: Colors.white,
-                      onPressed: () {
+                      onPressed: () async {
+                        HapticFeedback.heavyImpact();
                         //startShowing(context);
                         setState(() {
                           isLoading = true;
                         });
-                        fetchAttendanceData(
-                            DateFormat('yyyy-MM-dd').format(selectedDate!),
+                        await fetchAttendanceData(
+                            DateFormat('yyyy-MM-dd').format(selectedDate),
                             shiftValues[selectedShift] ?? '1');
                         //stopShowing(context);
                         Navigator.of(context).pop();
@@ -434,10 +444,6 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
   }
 
   Future<void> load() async {
-    setState(() {
-      isLoading = true;
-    });
-
     // Fetch attendance data for current date
     await fetchAttendanceData(DateFormat('yyyy-MM-dd').format(selectedDate),
         shiftValues[selectedShift] ?? '1');
@@ -487,6 +493,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
         int classId = item['class_id'];
         String className = item['class_name'];
         String? att = item['att'];
+        String dateTime = item['lut'] ?? '';
 
         // Store the attendance data
         attendanceData[classId] = {
@@ -496,8 +503,10 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
         };
 
         // Add to card data for displaying classes
-        cardData.add({'classId': classId, 'title': className});
+        cardData.add({'classId': classId, 'title': className, 'dt': dateTime});
       }
+
+      Log.d('Here-> : $cardData');
 
       // Initialize toggle state for all classes
       isToggled = List.filled(cardData.length, false);
@@ -578,7 +587,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                 color: Color(0xFF494949),
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 10.h),
 
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -593,7 +602,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                         Icon(
                           Icons.date_range,
                           size: 20.w,
-                          color: const Color(0xFFB8BCCA),
+                          color: const Color(0xFF494949),
                         ),
                         SizedBox(width: 8.w),
                         Text(
@@ -603,7 +612,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                             fontWeight: FontWeight.w500,
                             fontSize: 14.sp,
                             height: 1.5,
-                            color: const Color(0xFF969AB8),
+                            color: const Color(0xFF494949),
                           ),
                         ),
                       ],
@@ -618,7 +627,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                         Icon(
                           Icons.view_day_rounded,
                           size: 20.w,
-                          color: const Color(0xFFB8BCCA),
+                          color: const Color(0xFF494949),
                         ),
                         SizedBox(width: 8.w),
                         Text(
@@ -627,7 +636,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                             fontWeight: FontWeight.w500,
                             fontSize: 14.sp,
                             height: 1.5,
-                            color: const Color(0xFF969AB8),
+                            color: const Color(0xFF494949),
                           ),
                         ),
                       ],
@@ -703,7 +712,15 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
             //     }
             //   },
             // ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 10.h),
+            Divider(
+              indent: 10.w,
+              endIndent: 10.w,
+              color: Colors.grey[400],
+              thickness: 1,
+              height: 1.h,
+            ),
+            SizedBox(height: 10.h),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.all(16.r),
@@ -755,7 +772,8 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                                           getAttendanceCounts(classId);
 
                                       return buildAttendanceReportBottomDrawer(
-                                        data['title'].replaceAll("-", " "),
+                                        data['title'],
+                                        data['dt'],
                                         context,
                                         counts['present'].toString(),
                                         counts['absent'].toString(),
@@ -802,9 +820,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
                                         ),
                                         SizedBox(height: 4.h),
                                         Text(
-                                          data['title']
-                                              .toString()
-                                              .replaceAll(' ', '-'),
+                                          data['title'].toString(),
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 24.sp,
@@ -858,17 +874,42 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
               ),
             ),
 
-            SizedBox(height: 16.h),
-            TextButton(
-              onPressed: _showFilterDialog,
-              child: Text(
-                "Change Date/Shift",
-                style: TextStyle(
-                  color: Color(0xFFED7902),
-                  fontWeight: FontWeight.bold,
+            SizedBox(height: 30.h),
+            Divider(
+              indent: 10.w,
+              endIndent: 10.w,
+              color: Colors.grey[400],
+              thickness: 1,
+              height: 1.h,
+            ),
+            SizedBox(height: 10.h),
+            Padding(
+              padding: EdgeInsets.only(bottom: 5.h),
+              child: TextButton(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  _showFilterDialog();
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Color(0xFFED7902),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                    side: BorderSide(color: Colors.grey.shade100, width: 1.0),
+                  ),
+                  elevation: 2,
+                ),
+                child: Text(
+                  "Change Date/Shift",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -878,6 +919,7 @@ class AttendanceStatusScreenState extends State<AttendanceStatusScreen> {
 
 Widget buildAttendanceReportBottomDrawer(
     String className,
+    String dateTime,
     BuildContext context,
     String presentCount,
     String absentCount,
@@ -891,67 +933,197 @@ Widget buildAttendanceReportBottomDrawer(
     ),
     child: Container(
       color: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 10.w),
+      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         //mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.class_outlined,
-                  color: Color(0xFFED7902), size: 20),
-              SizedBox(width: 5.w),
-              Text(
-                className,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16.sp,
-                  color: Color(0xFFED7902),
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.date_range, color: Color(0xFF494949), size: 20.r),
+                  SizedBox(width: 5.w),
+                  Text(
+                    dateTime.split(' ')[0],
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                      color: Color(0xFF494949),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     Icon(Icons.class_outlined,
+              //         color: Color(0xFFED7902), size: 20.r),
+              //     SizedBox(width: 5.w),
+              //     Text(
+              //       className,
+              //       style: TextStyle(
+              //         fontWeight: FontWeight.bold,
+              //         fontSize: 16.sp,
+              //         color: Color(0xFFED7902),
+              //       ),
+              //       textAlign: TextAlign.center,
+              //     ),
+              //   ],
+              // ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.access_time_rounded,
+                      color: Color(0xFF494949), size: 20.r),
+                  SizedBox(width: 5.w),
+                  Text(
+                    '${dateTime.split(' ')[1]} ${dateTime.split(' ')[2]}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                      color: Color(0xFF494949),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ],
+          ),
+          SizedBox(height: 10.h),
+          Divider(
+            // indent: 20.w,
+            // endIndent: 20.w,
+            color: Colors.grey[400],
+            thickness: 1,
+            height: 1.h,
+          ),
+          SizedBox(height: 15.h),
+          Container(
+            width: 90.w,
+            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: Color(0xFFED7902),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.white70, width: 2.0),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.class_outlined, color: Colors.white, size: 20.r),
+                SizedBox(width: 5.w),
+                Text(
+                  className,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.sp,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 15.h),
+          Divider(
+            indent: 20.w,
+            endIndent: 20.w,
+            color: Colors.grey[400],
+            thickness: 1,
+            height: 1.h,
           ),
           SizedBox(height: 15.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // First Card - Present
-              _buildCard(
-                color: Color(0xFFF5F5F7),
-                borderColor: Color(0xFF33CC99),
-                shadowColor: Colors.black.withOpacity(0.25),
-                number: presentCount,
-                label: "Present",
-                textColor: Color(0xFF33CC99),
+              GestureDetector(
+                onTap: () async {
+                  // Fetch students for the selected class
+                  fetchStudents(
+                      'Present',
+                      context,
+                      classId.toString(),
+                      selectedDate,
+                      className,
+                      dateTime,
+                      int.parse(presentCount),
+                      int.parse(absentCount));
+                },
+                child: _buildCard(
+                  color: Color(0xFFF5F5F7),
+                  borderColor: Color(0xFF33CC99),
+                  shadowColor: Colors.black.withOpacity(0.25),
+                  number: presentCount,
+                  label: "Present",
+                  textColor: Color(0xFF33CC99),
+                ),
               ),
 
               SizedBox(width: 21.w), // Space between cards
               // Second Card - Absent
-              _buildCard(
-                color: Color(0xFFF5F5F7),
-                borderColor: Color(0xFFDD3E2B),
-                shadowColor: Colors.black.withOpacity(0.25),
-                number: absentCount,
-                label: "Absent",
-                textColor: Color(0xFFDD3E2B),
+              GestureDetector(
+                onTap: () async {
+                  // Fetch students for the selected class
+                  fetchStudents(
+                      'Absent',
+                      context,
+                      classId.toString(),
+                      selectedDate,
+                      className,
+                      dateTime,
+                      int.parse(presentCount),
+                      int.parse(absentCount));
+                },
+                child: _buildCard(
+                  color: Color(0xFFF5F5F7),
+                  borderColor: Color(0xFFDD3E2B),
+                  shadowColor: Colors.black.withOpacity(0.25),
+                  number: absentCount,
+                  label: "Absent",
+                  textColor: Color(0xFFDD3E2B),
+                ),
               ),
 
               SizedBox(width: 21.w), // Space between cards
               // Third Card - Total
-              _buildCard(
-                color: Color(0xFFF5F5F7),
-                borderColor: Color(0xFFFBCB99),
-                shadowColor: Colors.black.withOpacity(0.25),
-                number: totalCount,
-                label: "Total",
-                textColor: Colors.black,
+              GestureDetector(
+                onTap: () async {
+                  // Fetch students for the selected class
+                  fetchStudents(
+                      'All',
+                      context,
+                      classId.toString(),
+                      selectedDate,
+                      className,
+                      dateTime,
+                      int.parse(presentCount),
+                      int.parse(absentCount));
+                },
+                child: _buildCard(
+                  color: Color(0xFFF5F5F7),
+                  borderColor: Color(0xFFFBCB99),
+                  shadowColor: Colors.black.withOpacity(0.25),
+                  number: totalCount,
+                  label: "Total",
+                  textColor: Colors.black,
+                ),
               ),
             ],
           ),
-          SizedBox(height: 25.h),
+          SizedBox(height: 15.h),
+          Divider(
+            indent: 20.w,
+            endIndent: 20.w,
+            color: Colors.grey[400],
+            thickness: 1,
+            height: 1.h,
+          ),
+          SizedBox(height: 15.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -972,71 +1144,17 @@ Widget buildAttendanceReportBottomDrawer(
                 backgroundColor: const Color(0xFFED7902),
                 textColor: Colors.white,
                 onPressed: () async {
-                  startShowing(context);
-
-                  try {
-                    // Get the class ID from the current card data
-
-                    // Fetch data using your provided function
-                    final data = await ClassStudentRepo()
-                        .fetchTestClassStudentData(
-                            classId.toString(), selectedDate);
-
-                    // Stop showing loading indicator
-                    stopShowing(context);
-
-                    if (data != null) {
-                      showModalBottomSheet(
-                        isScrollControlled: true,
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(20.r)),
-                        ),
-                        context: context,
-                        builder: (context) {
-                          Map<int, String> students = {};
-                          Map<int, bool> attendance = {};
-                          Map<int, int> gender = {};
-
-                          // Loop through students array and build the required maps
-                          for (var student in data['students']) {
-                            int rollNo = student['roll_no'];
-                            students[rollNo] = student['name'];
-                            // att_status 1 = present, 2 = absent
-                            attendance[rollNo] = student['att_status'] == 1;
-                            gender[rollNo] = student['gender'];
-                          }
-
-                          return ClassAttendanceBottomSheetDrawer(
-                            students: students,
-                            attendance: attendance,
-                            gender: gender,
-                            className: className,
-                          );
-                        },
-                      );
-                    } else {
-                      // Show error message if data is null
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('No data available for this class'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    // Stop showing loading indicator in case of error
-                    stopShowing(context);
-
-                    // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                            'Error fetching student data: ${e.toString()}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                  // Fetch students for the selected class
+                  fetchStudents(
+                      'All',
+                      context,
+                      classId.toString(),
+                      selectedDate,
+                      className,
+                      dateTime,
+                      int.parse(presentCount),
+                      int.parse(absentCount));
+                  ;
                 },
               ),
             ],
@@ -1045,6 +1163,73 @@ Widget buildAttendanceReportBottomDrawer(
       ),
     ),
   );
+}
+
+void fetchStudents(
+    String filter,
+    BuildContext context,
+    String classId,
+    String selectedDate,
+    String className,
+    String dateTime,
+    int presentCount,
+    int absentCount) async {
+  startShowing(context);
+
+  try {
+    // Get the class ID from the current card data
+
+    // Fetch data using your provided function
+    final data = await ClassStudentRepo()
+        .fetchTestClassStudentData(classId, selectedDate);
+
+    // Stop showing loading indicator
+    stopShowing(context);
+
+    showModalBottomSheet(
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      context: context,
+      builder: (context) {
+        Map<int, String> students = {};
+        Map<int, bool> attendance = {};
+        Map<int, int> gender = {};
+
+        // Loop through students array and build the required maps
+        for (var student in data['students']) {
+          int rollNo = student['roll_no'];
+          students[rollNo] = student['name'];
+          // att_status 1 = present, 2 = absent
+          attendance[rollNo] = student['att_status'] == 1;
+          gender[rollNo] = student['gender'];
+        }
+
+        return ClassAttendanceBottomSheetDrawer(
+          students: students,
+          attendance: attendance,
+          gender: gender,
+          className: className,
+          dateTime: dateTime,
+          filter: filter,
+          totalPresent: presentCount,
+          totalAbsent: absentCount,
+        );
+      },
+    );
+  } catch (e) {
+    // Stop showing loading indicator in case of error
+    stopShowing(context);
+
+    // Show error message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error fetching student data: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 }
 
 Widget _buildCard({
@@ -1056,8 +1241,8 @@ Widget _buildCard({
   required Color textColor,
 }) {
   return Container(
-    width: 94.w,
-    height: 102.h,
+    width: 90.w,
+    height: 94.h,
     decoration: BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(7.r),
@@ -1084,7 +1269,7 @@ Widget _buildCard({
             letterSpacing: 0.4.w,
           ),
         ),
-        SizedBox(height: 8.h),
+        //SizedBox(height: 4.h),
         Text(
           label,
           style: TextStyle(
@@ -1106,6 +1291,10 @@ class ClassAttendanceBottomSheetDrawer extends StatefulWidget {
   final Map<int, bool> attendance; // Roll No -> Present (true/false)
   final Map<int, int> gender; // Roll No -> Gender ID (1 for male, 2 for female)
   final String className;
+  final String dateTime;
+  final int totalPresent;
+  final int totalAbsent;
+  final String filter;
 
   const ClassAttendanceBottomSheetDrawer({
     super.key,
@@ -1113,6 +1302,10 @@ class ClassAttendanceBottomSheetDrawer extends StatefulWidget {
     required this.attendance,
     required this.gender,
     required this.className,
+    required this.dateTime,
+    required this.totalPresent,
+    required this.totalAbsent,
+    this.filter = 'All',
   });
 
   @override
@@ -1122,13 +1315,17 @@ class ClassAttendanceBottomSheetDrawer extends StatefulWidget {
 
 class _ClassAttendanceBottomSheetDrawerState
     extends State<ClassAttendanceBottomSheetDrawer> {
-  String selectedFilter = 'All';
+  late String selectedFilter;
   late Map<int, String> filteredStudents;
 
   @override
   void initState() {
     super.initState();
     // Initialize filteredStudents with all students
+    setState(() {
+      selectedFilter = widget.filter;
+    });
+
     applyFilters();
   }
 
@@ -1157,7 +1354,7 @@ class _ClassAttendanceBottomSheetDrawerState
       ),
       child: Container(
         height: 600.h,
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 10.w),
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(
@@ -1176,80 +1373,197 @@ class _ClassAttendanceBottomSheetDrawerState
           children: [
             // Header Row
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  Icons.class_outlined,
-                  color: Color(0xFFED7902),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     Icon(Icons.class_outlined,
+                //         color: Color(0xFFED7902), size: 20.r),
+                //     SizedBox(width: 5.w),
+                //     Text(
+                //       widget.className,
+                //       style: TextStyle(
+                //         fontWeight: FontWeight.bold,
+                //         fontSize: 16.sp,
+                //         color: Color(0xFFED7902),
+                //       ),
+                //       textAlign: TextAlign.center,
+                //     ),
+                //   ],
+                // ),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.date_range,
+                        color: Color(0xFF494949), size: 20.r),
+                    SizedBox(width: 5.w),
+                    Text(
+                      widget.dateTime.split(' ')[0],
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                        color: Color(0xFF494949),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                Text(
-                  widget.className,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.sp,
-                    color: Color(0xFFED7902),
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.access_time_rounded,
+                        color: Color(0xFF494949), size: 20.r),
+                    SizedBox(width: 5.w),
+                    Text(
+                      '${widget.dateTime.split(' ')[1]} ${widget.dateTime.split(' ')[2]}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                        color: Color(0xFF494949),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ],
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 10.h),
+            Divider(
+              // indent: 20.w,
+              // endIndent: 20.w,
+              color: Colors.grey[400],
+              thickness: 1,
+              height: 1.h,
+            ),
+            SizedBox(height: 15.h),
+            Container(
+              width: 90.w,
+              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Color(0xFFED7902), // Light orange background color
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: Colors.white70, width: 2.0),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // Make row wrap its content
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.class_outlined, color: Colors.white, size: 20.r),
+                  SizedBox(width: 5.w),
+                  Text(
+                    widget.className,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     Icon(Icons.class_outlined,
+            //         color: Color(0xFFED7902), size: 20.r),
+            //     SizedBox(width: 5.w),
+            //     Text(
+            //       widget.className,
+            //       style: TextStyle(
+            //         fontWeight: FontWeight.bold,
+            //         fontSize: 16.sp,
+            //         color: Color(0xFFED7902),
+            //       ),
+            //       textAlign: TextAlign.center,
+            //     ),
+            //   ],
+            // ),
+            // Divider(
+            //   // indent: 20.w,
+            //   // endIndent: 20.w,
+            //   color: Colors.grey[400],
+            //   thickness: 1,
+            //   height: 1.h,
+            // ),
+            SizedBox(height: 15.h),
+            Divider(
+              indent: 20.w,
+              endIndent: 20.w,
+              color: Colors.grey[400],
+              thickness: 1,
+              height: 1.h,
+            ),
+            SizedBox(height: 15.h),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 25.w,
-              children: ['All', 'Present', 'Absent']
-                  .map((filter) => GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedFilter = filter;
-                          //onFilterSelected(selectedFilter);
-                        });
-                        applyFilters();
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 18.w,
-                            height: 18.h,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: selectedFilter == filter
-                                    ? const Color(0xFFED7902)
-                                    : const Color(0xFF969AB8),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(13.r),
-                            ),
-                            child: selectedFilter == filter
-                                ? Center(
-                                    child: Container(
-                                      width: 12.w,
-                                      height: 12.h,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Color(0xFFED7902),
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          SizedBox(width: 2.w),
-                          Text(
-                            filter,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E1E1E),
-                            ),
-                          ),
-                        ],
-                      )))
-                  .toList(),
+              children: [
+                _buildFilterOption('All', '(${widget.students.length})'),
+                SizedBox(width: 15.w),
+                _buildFilterOption('Present', '(${widget.totalPresent})'),
+                SizedBox(width: 15.w),
+                _buildFilterOption('Absent', '(${widget.totalAbsent})'),
+              ],
             ),
 
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   spacing: 25.w,
+            //   children: ['All', 'Present', 'Absent']
+            //       .map((filter) => GestureDetector(
+            //           onTap: () {
+            //             setState(() {
+            //               selectedFilter = filter;
+            //               //onFilterSelected(selectedFilter);
+            //             });
+            //             applyFilters();
+            //           },
+            //           child: Row(
+            //             children: [
+            //               Container(
+            //                 width: 18.w,
+            //                 height: 18.h,
+            //                 decoration: BoxDecoration(
+            //                   border: Border.all(
+            //                     color: selectedFilter == filter
+            //                         ? const Color(0xFFED7902)
+            //                         : const Color(0xFF969AB8),
+            //                     width: 1,
+            //                   ),
+            //                   borderRadius: BorderRadius.circular(13.r),
+            //                 ),
+            //                 child: selectedFilter == filter
+            //                     ? Center(
+            //                         child: Container(
+            //                           width: 12.w,
+            //                           height: 12.h,
+            //                           decoration: const BoxDecoration(
+            //                             shape: BoxShape.circle,
+            //                             color: Color(0xFFED7902),
+            //                           ),
+            //                         ),
+            //                       )
+            //                     : null,
+            //               ),
+            //               SizedBox(width: 2.w),
+            //               Text(
+            //                 filter,
+            //                 style: TextStyle(
+            //                   fontSize: 14.sp,
+            //                   fontWeight: FontWeight.bold,
+            //                   color: Color(0xFF1E1E1E),
+            //                 ),
+            //               ),
+            //             ],
+            //           )))
+            //       .toList(),
+            // ),
+
             SizedBox(
-              height: 20.h,
+              height: 15.h,
             ),
             // Header Row for Student Info
             Padding(
@@ -1372,8 +1686,77 @@ class _ClassAttendanceBottomSheetDrawerState
                 },
               ),
             ),
+
+            Divider(
+              color: Colors.grey[400],
+              thickness: 2,
+              height: 1.h,
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFilterOption(String filter, String countText) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedFilter = filter;
+        });
+        applyFilters();
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 18.w,
+            height: 18.h,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: selectedFilter == filter
+                    ? const Color(0xFFED7902)
+                    : const Color(0xFF969AB8),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(13.r),
+            ),
+            child: selectedFilter == filter
+                ? Center(
+                    child: Container(
+                      width: 12.w,
+                      height: 12.h,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFFED7902),
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          SizedBox(width: 2.w),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: filter,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E1E1E),
+                  ),
+                ),
+                TextSpan(
+                  text: ' $countText',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF494949),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

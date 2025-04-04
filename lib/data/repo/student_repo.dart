@@ -85,7 +85,7 @@ class StudentRepository extends HttpService {
     List<Map<String, dynamic>> cardData = classData.map((classData) {
       return {
         'classId': classData.id,
-        'title': classData.className.replaceAll('-', ' '), // Formatting title
+        'title': classData.className, // Formatting title
         'count': 0, // Default value (replace with actual student count)
         'label': 'Students',
       };
@@ -171,6 +171,40 @@ class StudentRepository extends HttpService {
     final data = await post(
       API.buildUrl(API.getAttReport),
       data: {'shift_id': shift, 'att_date': date},
+      headers: {
+        'Authorization': 'Bearer $tkn',
+      },
+    );
+    final apiData = data;
+    Log.d('ApiData: $apiData');
+
+    return apiData;
+  }
+
+  Future<dynamic> fetchWholeSchoolAttendanceReport(
+      String dateFrom, String dateTo, String shiftId) async {
+    final tkn = await getBearerToken();
+
+    final data = await post(
+      API.buildUrl(API.getWholeSchoolAttReport),
+      data: {'frm_dt': dateFrom, 'to_dt': dateTo, 'shift_id': shiftId},
+      headers: {
+        'Authorization': 'Bearer $tkn',
+      },
+    );
+    final apiData = data;
+    Log.d('ApiData: $apiData');
+
+    return apiData;
+  }
+
+  Future<dynamic> fetchClassAttendanceSummary(
+      String classId, String dateFrom, String dateTo) async {
+    final tkn = await getBearerToken();
+
+    final data = await post(
+      API.buildUrl(API.getClassAttSummary),
+      data: {'class_id': classId, 'frm_dt': dateFrom, 'to_dt': dateTo},
       headers: {
         'Authorization': 'Bearer $tkn',
       },

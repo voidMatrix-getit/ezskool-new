@@ -243,7 +243,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                 SvgPicture.asset('assets/vec.svg', width: 14.w, height: 17.h),
                 SizedBox(width: 5.w),
                 Text(
-                  stvm.formatClass(stvm.className),
+                  stvm.className,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 16.sp,

@@ -15,6 +15,8 @@ class API {
   static const getParentsContact = 'get_parents_contact';
   static const getBirthdays = 'get_student_bday';
   static const getAttReport = 'get_shift_att';
+  static const getWholeSchoolAttReport = 'get_shift_wise_school_att';
+  static const getClassAttSummary = 'get_class_att_summary';
 
   static void setBaseURL(String url) {
     baseURL = url;

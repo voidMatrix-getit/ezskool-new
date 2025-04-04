@@ -5,11 +5,10 @@ import 'package:ezskool/core/constants/api_data.dart';
 import 'package:ezskool/core/services/http_service.dart';
 import 'package:ezskool/core/services/logger.dart';
 import 'package:ezskool/presentation/screens/loginscreen.dart'; //views/login_screen.dart
+import 'package:ezskool/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
 
 class AuthRepository extends HttpService {
-
-
   Future<Map<String, dynamic>> register({
     required String institutionName,
     required String contactPerson,
@@ -35,7 +34,6 @@ class AuthRepository extends HttpService {
       },
     );
 
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success']) {
@@ -53,8 +51,6 @@ class AuthRepository extends HttpService {
     required String userName,
     required String password,
   }) async {
-
-
     try {
       // Using the generic post function
       final response = await post(
@@ -67,19 +63,15 @@ class AuthRepository extends HttpService {
       );
       Log.d(response);
 
-
       if (response[APIData.success] == true) {
-
         await storeBearerToken(response[APIData.data][HttpService.token]);
 
         String? tk = await getBearerToken();
 
         Log.d(tk!);
 
-
         return response;
       } else {
-
         throw Exception('Login Failed: ${response['message']}');
       }
     } catch (error) {
@@ -88,9 +80,7 @@ class AuthRepository extends HttpService {
     }
   }
 
-
   Future<void> logout(BuildContext context) async {
-
     // API call to log out
     var tkn = await getBearerToken();
     final response = await post(
@@ -101,13 +91,15 @@ class AuthRepository extends HttpService {
     );
 
     if (response['success']) {
-
       await storeBearerToken('');
 
-      Navigator.of(context, rootNavigator: true).pop();
+      stopShowing(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logged out successfully'), duration: Duration(seconds: 1),backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('Logged out successfully'),
+            duration: Duration(seconds: 1),
+            backgroundColor: Colors.green),
       );
 
       Navigator.pushAndRemoveUntil(
@@ -124,7 +116,41 @@ class AuthRepository extends HttpService {
     }
   }
 
+  Future<Map<String, dynamic>> logout2() async {
+    try {
+      // Get token
+      String? tkn = await getBearerToken();
+      if (tkn == null || tkn.isEmpty) {
+        return {'success': false, 'message': 'No active session found'};
+      }
+
+      // Make server logout request
+      final response = await post(
+        API.buildUrl(API.logout),
+        headers: {
+          'Authorization': 'Bearer $tkn',
+        },
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => {'success': false, 'error': 'Connection timeout'},
+      );
+
+      // Only proceed with local logout if server confirms success
+      if (response['success'] == true) {
+        // Clear token and other data
+        await storeBearerToken('');
+
+        return {'success': true, 'message': 'Logged out successfully'};
+      } else {
+        // Server rejected the logout
+        return {
+          'success': false,
+          'message': response['error'] ?? 'Failed to log out. Please try again.'
+        };
+      }
+    } catch (e) {
+      // Error during logout
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
+    }
+  }
 }
-
-
-

@@ -39,11 +39,11 @@ class MarkAbsentBottomDrawer extends StatefulWidget {
   final int gender;
 
   const MarkAbsentBottomDrawer({
-    Key? key,
+    super.key,
     required this.rollNo,
     required this.name,
     required this.gender,
-  }) : super(key: key);
+  });
 
   @override
   _MarkAbsentBottomDrawerState createState() => _MarkAbsentBottomDrawerState();
@@ -648,12 +648,12 @@ class MarkPresentBottomDrawer extends StatefulWidget {
   final String reason;
 
   const MarkPresentBottomDrawer({
-    Key? key,
+    super.key,
     required this.rollNo,
     required this.name,
     required this.gender,
     required this.reason,
-  }) : super(key: key);
+  });
 
   @override
   _MarkPresentBottomDrawerState createState() =>

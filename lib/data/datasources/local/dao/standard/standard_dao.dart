@@ -5,12 +5,14 @@ import 'package:ezskool/data/datasources/local/db/tables.dart';
 part 'standard_dao.g.dart';
 
 @DriftAccessor(tables: [Standards])
-class StandardDao extends DatabaseAccessor<AppDatabase> with _$StandardDaoMixin {
-  StandardDao(AppDatabase db) : super(db);
+class StandardDao extends DatabaseAccessor<AppDatabase>
+    with _$StandardDaoMixin {
+  StandardDao(super.db);
 
   /// Insert or replace a standard
   Future<void> insertStandard(StandardsCompanion standardCompanion) async {
-    await into(standards).insert(standardCompanion, mode: InsertMode.insertOrReplace);
+    await into(standards)
+        .insert(standardCompanion, mode: InsertMode.insertOrReplace);
   }
 
   /// Get all standards

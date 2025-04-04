@@ -7,7 +7,7 @@ import 'package:ezskool/data/viewmodels/class_confirm_attendance_viewmodel.dart'
 import 'package:ezskool/data/viewmodels/home_viewmodel.dart';
 import 'package:ezskool/data/viewmodels/login_viewmodel.dart';
 import 'package:ezskool/data/viewmodels/registration_viewmodel.dart';
-import 'package:ezskool/presentation/views/class_attendance/new_class_attendance_home_screen.dart';
+import 'package:ezskool/presentation/views/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ezskool/presentation/screens/splashscreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -263,9 +263,7 @@ class MyApp extends StatelessWidget {
                   useMaterial3: true),
               navigatorKey: navigatorKey,
               //initialRoute: null,
-              home: initialRoute == '/'
-                  ? SplashScreen()
-                  : NewClassAttendanceHomeScreen(),
+              home: initialRoute == '/' ? SplashScreen() : HomeScreen(),
               // routes: {
               //   '/': (context) => SplashScreen(),
               //   '/login': (context) => LoginScreen(),

@@ -3,6 +3,7 @@ import 'package:ezskool/data/repo/class_student_repo.dart';
 import 'package:ezskool/data/repo/student_repo.dart';
 import 'package:ezskool/data/viewmodels/class_attendance/class_attendance_home_viewmodel.dart';
 import 'package:ezskool/data/viewmodels/class_attendance/student_listing_viewmodel.dart';
+import 'package:ezskool/presentation/drawers/calendar_bottom_drawer.dart';
 import 'package:ezskool/presentation/views/class_attendance/new_class_attendance_home_screen.dart';
 import 'package:ezskool/presentation/widgets/custom_buttons.dart';
 import 'package:ezskool/presentation/widgets/loading.dart';
@@ -14,7 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class StudentWiseAttendanceSummaryScreen extends StatefulWidget {
-  const StudentWiseAttendanceSummaryScreen({Key? key}) : super(key: key);
+  const StudentWiseAttendanceSummaryScreen({super.key});
 
   @override
   State<StudentWiseAttendanceSummaryScreen> createState() =>
@@ -122,6 +123,7 @@ class _StudentWiseAttendanceSummaryScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 SelectorWidget(
+                  hint: 'Select Date',
                   text: formattedDate ?? 'Select Date',
                   leadingIcon: Icons.date_range,
                   onTap: () {
@@ -160,6 +162,7 @@ class _StudentWiseAttendanceSummaryScreenState
                 ),
                 SizedBox(height: 16.h),
                 SelectorWidget(
+                  hint: 'Select Class',
                   text: selectedClass ?? 'Select Class',
                   leadingIcon: Icons.class_outlined,
                   onTap: () {
@@ -181,6 +184,7 @@ class _StudentWiseAttendanceSummaryScreenState
                       backgroundColor: const Color(0xFFF5F5F5),
                       textColor: Color(0xFF494949),
                       onPressed: () {
+                        HapticFeedback.lightImpact();
                         Navigator.of(context).pop();
                       },
                     ),
@@ -192,6 +196,7 @@ class _StudentWiseAttendanceSummaryScreenState
                       backgroundColor: const Color(0xFFED7902),
                       textColor: Colors.white,
                       onPressed: () {
+                        HapticFeedback.heavyImpact();
                         //startShowing(context);
                         setState(() {
                           isLoadingMain = true;
@@ -243,43 +248,28 @@ class _StudentWiseAttendanceSummaryScreenState
       Log.d('classId: $classId, date: $date');
       Log.d('data: $data');
 
-      if (data != null) {
-        List<StudentAttendanceData> newData = [];
+      List<StudentAttendanceData> newData = [];
 
-        // Process the student data
-        for (var student in data['students']) {
-          int rollNo = student['roll_no'];
-          String name = student['name'];
-          bool isPresent = student['att_status'] == 1;
-          int gender = student['gender'];
+      // Process the student data
+      for (var student in data['students']) {
+        int rollNo = student['roll_no'];
+        String name = student['name'];
+        bool isPresent = student['att_status'] == 1;
+        int gender = student['gender'];
 
-          newData.add(StudentAttendanceData(
-            rollNo: rollNo,
-            name: name,
-            isPresent: isPresent,
-            gender: gender,
-          ));
-        }
-
-        setState(() {
-          attendanceData = newData;
-          isLoading = false;
-          isLoadingMain = false;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('No data available for this class'),
-            backgroundColor: Colors.red,
-          ),
-        );
-
-        setState(() {
-          attendanceData = [];
-          isLoading = false;
-          isLoadingMain = false;
-        });
+        newData.add(StudentAttendanceData(
+          rollNo: rollNo,
+          name: name,
+          isPresent: isPresent,
+          gender: gender,
+        ));
       }
+
+      setState(() {
+        attendanceData = newData;
+        isLoading = false;
+        isLoadingMain = false;
+      });
     } catch (e) {
       setState(() {
         attendanceData = [];
@@ -324,13 +314,15 @@ class _StudentWiseAttendanceSummaryScreenState
           },
         ),
       ),
-      child: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            physics: ClampingScrollPhysics(),
             children: [
               SizedBox(height: 15.h),
               Text(
+                textAlign: TextAlign.center,
                 "Student-Wise Attendance Summary",
                 style: TextStyle(
                   fontSize: 16.sp,
@@ -338,7 +330,7 @@ class _StudentWiseAttendanceSummaryScreenState
                   color: Color(0xFF494949),
                 ),
               ),
-              SizedBox(height: 15.h),
+              SizedBox(height: 10.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: SizedBox(
@@ -351,7 +343,7 @@ class _StudentWiseAttendanceSummaryScreenState
                           Icon(
                             Icons.date_range,
                             size: 20.w,
-                            color: const Color(0xFFB8BCCA),
+                            color: const Color(0xFF494949),
                           ),
                           SizedBox(width: 8.w),
                           Text(
@@ -361,7 +353,7 @@ class _StudentWiseAttendanceSummaryScreenState
                               fontWeight: FontWeight.w500,
                               fontSize: 14.sp,
                               height: 1.5,
-                              color: const Color(0xFF969AB8),
+                              color: const Color(0xFF494949),
                             ),
                           ),
                         ],
@@ -376,16 +368,16 @@ class _StudentWiseAttendanceSummaryScreenState
                           Icon(
                             Icons.class_outlined,
                             size: 20.w,
-                            color: const Color(0xFFB8BCCA),
+                            color: const Color(0xFF494949),
                           ),
                           SizedBox(width: 8.w),
                           Text(
-                            selectedClass ?? "Selected Class",
+                            selectedClass ?? "",
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 14.sp,
                               height: 1.5,
-                              color: const Color(0xFF969AB8),
+                              color: const Color(0xFF494949),
                             ),
                           ),
                         ],
@@ -394,7 +386,15 @@ class _StudentWiseAttendanceSummaryScreenState
                   ),
                 ),
               ),
-              SizedBox(height: 15.h),
+              SizedBox(height: 10.h),
+              Divider(
+                // indent: 20.w,
+                // endIndent: 20.w,
+                color: Colors.grey[400],
+                thickness: 1,
+                height: 1.h,
+              ),
+              SizedBox(height: 10.h),
               SizedBox(
                 child: isLoadingMain
                     ? Center(
@@ -406,25 +406,51 @@ class _StudentWiseAttendanceSummaryScreenState
                         attendanceData: attendanceData,
                       ),
               ),
-              if (isLoading || attendanceData.isEmpty) ...[
-                SizedBox(height: 540.h),
-              ] else ...[
-                SizedBox(height: 2.h),
-              ],
-              TextButton(
-                onPressed: _showFilterDialog,
-                child: Text(
-                  "Change Date/Class",
-                  style: TextStyle(
-                    color: Color(0xFFED7902),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              // if (isLoading || attendanceData.isEmpty) ...[
+              //   SizedBox(height: 540.h),
+              // ] else ...[
+              //   SizedBox(height: 2.h),
+              // ],
+              //SizedBox(height: 2.h),
             ],
           ),
         ),
-      ),
+        SizedBox(height: 10.h),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          color: Colors.grey[400],
+          thickness: 1,
+          height: 1.h,
+        ),
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.only(bottom: 10.h),
+          child: TextButton(
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              _showFilterDialog();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFFED7902),
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                side: BorderSide(color: Colors.grey.shade100, width: 1.0),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              "Change Date/Class",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        )
+      ]),
     );
   }
 
@@ -437,7 +463,7 @@ class _StudentWiseAttendanceSummaryScreenState
 
     String? tempStandard = viewModel.selectedStandard;
     String? tempDivision = viewModel.selectedDivision;
-    String? tempClass = viewModel.selectedClass;
+    String? tempClass = '';
 
     showModalBottomSheet(
       context: context,
@@ -447,7 +473,7 @@ class _StudentWiseAttendanceSummaryScreenState
           return GestureDetector(
             onTap: () {},
             child: Container(
-              height: 550.h,
+              height: 520.h,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(36.r),
@@ -457,33 +483,43 @@ class _StudentWiseAttendanceSummaryScreenState
               ),
               child: Column(
                 children: [
-                  SizedBox(height: 13.h),
-                  Container(
-                    height: 4.h,
-                    width: 164.w,
-                    decoration: BoxDecoration(
-                      color: Color(0xFFD9D9D9),
-                      borderRadius: BorderRadius.circular(22.r),
+                  SizedBox(height: 20.h),
+                  // Container(
+                  //   height: 4.h,
+                  //   width: 164.w,
+                  //   decoration: BoxDecoration(
+                  //     color: Color(0xFFD9D9D9),
+                  //     borderRadius: BorderRadius.circular(22.r),
+                  //   ),
+                  // ),
+                  Text(
+                    'Select Class',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16.sp,
+                      height: 1.5.h,
+                      color: Color(0xFFA29595),
                     ),
                   ),
-                  SizedBox(height: 20.h),
+
+                  SizedBox(height: 13.h),
 
                   SizedBox(
                       // height: 450.h,
                       // width: double.infinity.w,
                       child: Column(children: [
-                    Text(
-                      'Select Class',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16.sp,
-                        height: 1.5.h,
-                        color: Color(0xFFA29595),
-                      ),
+                    Divider(
+                      indent: 20.w,
+                      endIndent: 20.w,
+                      color: Colors.grey[400],
+                      thickness: 1,
+                      height: 1.h,
                     ),
+
                     // SizedBox(height: 20),
                     Padding(
-                      padding: EdgeInsets.all(32.r),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 32.w, vertical: 16.h),
                       child: GridView.builder(
                         shrinkWrap: true,
                         physics: AlwaysScrollableScrollPhysics(),
@@ -592,7 +628,7 @@ class _StudentWiseAttendanceSummaryScreenState
                   ])),
 
                   SizedBox(
-                    height: 15.h,
+                    height: 30.h,
                   ),
 
                   Divider(
@@ -604,7 +640,8 @@ class _StudentWiseAttendanceSummaryScreenState
                   ),
                   // SizedBox(height: 5,),
                   Padding(
-                    padding: EdgeInsets.all(16.r),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.r, vertical: 10.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -690,14 +727,18 @@ class StudentAttendanceSummary extends StatelessWidget {
   final List<StudentAttendanceData> attendanceData;
 
   const StudentAttendanceSummary({
-    Key? key,
+    super.key,
     required this.attendanceData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 348.w,
+      // height: 570.h,
+      constraints: BoxConstraints(
+        maxHeight: 550.h, // Maximum height constraint
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4.r),
@@ -712,9 +753,21 @@ class StudentAttendanceSummary extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(),
-          _buildTable(),
+          Flexible(
+            // Wrap the data table in an Expanded to take remaining space
+            child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              // Make only the data table scrollable
+              child: SizedBox(
+                // Match the width of the parent
+                width: 348.w,
+                child: _buildTable(),
+              ),
+            ),
+          ), // Rem
         ],
       ),
     );
@@ -891,16 +944,18 @@ class StudentAttendanceData {
 }
 
 class SelectorWidget extends StatelessWidget {
+  final String hint;
   final String text;
   final IconData leadingIcon;
   final VoidCallback onTap;
 
   const SelectorWidget({
-    Key? key,
+    super.key,
+    this.hint = '',
     required this.text,
     required this.leadingIcon,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -920,7 +975,7 @@ class SelectorWidget extends StatelessWidget {
             Icon(
               leadingIcon,
               size: 20.w,
-              color: const Color(0xFFB8BCCA),
+              color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -929,14 +984,14 @@ class SelectorWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF969AB8),
+                  color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
                 ),
               ),
             ),
             Icon(
               Icons.keyboard_arrow_down,
               size: 20.w,
-              color: const Color(0xFFB8BCCA),
+              color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
             ),
           ],
         ),
@@ -946,6 +1001,7 @@ class SelectorWidget extends StatelessWidget {
 }
 
 class SelectorDropdownWidget extends StatelessWidget {
+  final String hint;
   final String text;
   final IconData leadingIcon;
   final List<String> items;
@@ -953,13 +1009,14 @@ class SelectorDropdownWidget extends StatelessWidget {
   final double width;
 
   const SelectorDropdownWidget({
-    Key? key,
+    super.key,
+    this.hint = '',
     required this.text,
     required this.leadingIcon,
     required this.items,
     required this.onChanged,
     this.width = 200.0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -977,14 +1034,14 @@ class SelectorDropdownWidget extends StatelessWidget {
           icon: Icon(
             Icons.keyboard_arrow_down,
             size: 20.w,
-            color: const Color(0xFFB8BCCA),
+            color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
           ),
           hint: Row(
             children: [
               Icon(
                 leadingIcon,
                 size: 20.w,
-                color: const Color(0xFFB8BCCA),
+                color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
               ),
               SizedBox(width: 12.w),
               Text(
@@ -992,7 +1049,7 @@ class SelectorDropdownWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF969AB8),
+                  color: text == hint ? Color(0xFF969AB8) : Color(0xFF494949),
                 ),
               ),
             ],
@@ -1006,7 +1063,7 @@ class SelectorDropdownWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF969AB8),
+                  color: Colors.black,
                 ),
               ),
             );

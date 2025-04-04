@@ -1,5 +1,11 @@
 <<<<<<< HEAD
-# ezskool-new
+# ezskool-new 
+# Code by Sahil Lalani
+# versioning
+Flutter 3.29.0 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 35c388afb5 (7 weeks ago) • 2025-02-10 12:48:41 -0800
+Engine • revision f73bfc4522
+Tools • Dart 3.7.0 • DevTools 2.42.2
 =======
 # ezskool
 

@@ -5,13 +5,15 @@ import '../../db/tables.dart';
 part 'dropdown_options_dao.g.dart';
 
 @DriftAccessor(tables: [DropdownOptions])
-class DropdownDao extends DatabaseAccessor<AppDatabase> with _$DropdownDaoMixin {
-  DropdownDao(AppDatabase db) : super(db);
+class DropdownDao extends DatabaseAccessor<AppDatabase>
+    with _$DropdownDaoMixin {
+  DropdownDao(super.db);
 
   // Insert options into the database
   Future<void> insertDropdownOptions(List<Map<String, String>> options) async {
     await batch((batch) {
-      batch.deleteWhere(dropdownOptions, (tbl) => const Constant(true)); // Clear existing data
+      batch.deleteWhere(dropdownOptions,
+          (tbl) => const Constant(true)); // Clear existing data
       batch.insertAll(
         dropdownOptions,
         options.map((entry) {

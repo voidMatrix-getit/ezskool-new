@@ -1,5 +1,6 @@
 import 'package:ezskool/core/services/logger.dart';
 import 'package:ezskool/data/repo/student_repo.dart';
+import 'package:ezskool/presentation/drawers/calendar_bottom_drawer.dart';
 import 'package:ezskool/presentation/views/class_attendance/new_class_attendance_home_screen.dart';
 import 'package:ezskool/presentation/widgets/custom_buttons.dart';
 import 'package:ezskool/presentation/widgets/loading.dart';
@@ -12,7 +13,7 @@ import 'class_attendance_status.dart';
 // Adjust import path as needed
 
 class ClasswiseAttendanceSummaryScreen extends StatefulWidget {
-  const ClasswiseAttendanceSummaryScreen({Key? key}) : super(key: key);
+  const ClasswiseAttendanceSummaryScreen({super.key});
 
   @override
   State<ClasswiseAttendanceSummaryScreen> createState() =>
@@ -106,6 +107,7 @@ class _ClasswiseAttendanceSummaryScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 SelectorWidget(
+                  hint: 'Select Date',
                   text: formattedDate ?? 'Select Date',
                   leadingIcon: Icons.date_range,
                   onTap: () {
@@ -146,6 +148,7 @@ class _ClasswiseAttendanceSummaryScreenState
                 SizedBox(height: 16.h),
                 SelectorDropdownWidget(
                   width: 250.0,
+                  hint: 'Select Shift',
                   text: selectedShift ?? "Select Shift",
                   leadingIcon: Icons.view_day_rounded,
                   items: shiftOptions,
@@ -169,6 +172,7 @@ class _ClasswiseAttendanceSummaryScreenState
                       backgroundColor: const Color(0xFFF5F5F5),
                       textColor: Color(0xFF494949),
                       onPressed: () {
+                        HapticFeedback.lightImpact();
                         Navigator.of(context).pop();
                       },
                     ),
@@ -180,6 +184,7 @@ class _ClasswiseAttendanceSummaryScreenState
                       backgroundColor: const Color(0xFFED7902),
                       textColor: Colors.white,
                       onPressed: () {
+                        HapticFeedback.heavyImpact();
                         setState(() {
                           isLoadingMain = true;
                         });
@@ -292,13 +297,15 @@ class _ClasswiseAttendanceSummaryScreenState
           },
         ),
       ),
-      child: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            physics: ClampingScrollPhysics(),
             children: [
               SizedBox(height: 15.h),
               Text(
+                textAlign: TextAlign.center,
                 "Class-Wise Attendance Summary",
                 style: TextStyle(
                   fontSize: 16.sp,
@@ -306,7 +313,7 @@ class _ClasswiseAttendanceSummaryScreenState
                   color: Color(0xFF494949),
                 ),
               ),
-              SizedBox(height: 15.h),
+              SizedBox(height: 10.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: SizedBox(
@@ -320,7 +327,7 @@ class _ClasswiseAttendanceSummaryScreenState
                           Icon(
                             Icons.date_range,
                             size: 20.w,
-                            color: const Color(0xFFB8BCCA),
+                            color: const Color(0xFF494949),
                           ),
                           SizedBox(width: 8.w),
                           Text(
@@ -330,7 +337,7 @@ class _ClasswiseAttendanceSummaryScreenState
                               fontWeight: FontWeight.w500,
                               fontSize: 14.sp,
                               height: 1.5,
-                              color: const Color(0xFF969AB8),
+                              color: const Color(0xFF494949),
                             ),
                           ),
                         ],
@@ -345,7 +352,7 @@ class _ClasswiseAttendanceSummaryScreenState
                           Icon(
                             Icons.view_day_rounded,
                             size: 20.w,
-                            color: const Color(0xFFB8BCCA),
+                            color: const Color(0xFF494949),
                           ),
                           SizedBox(width: 8.w),
                           Text(
@@ -354,7 +361,7 @@ class _ClasswiseAttendanceSummaryScreenState
                               fontWeight: FontWeight.w500,
                               fontSize: 14.sp,
                               height: 1.5,
-                              color: const Color(0xFF969AB8),
+                              color: const Color(0xFF494949),
                             ),
                           ),
                         ],
@@ -363,7 +370,15 @@ class _ClasswiseAttendanceSummaryScreenState
                   ),
                 ),
               ),
-              SizedBox(height: 15.h),
+              SizedBox(height: 10.h),
+              Divider(
+                // indent: 20.w,
+                // endIndent: 20.w,
+                color: Colors.grey[400],
+                thickness: 1,
+                height: 1.h,
+              ),
+              SizedBox(height: 5.h),
               SizedBox(
                 child: isLoadingMain
                     ? Center(
@@ -374,25 +389,50 @@ class _ClasswiseAttendanceSummaryScreenState
                         attendanceData: attendanceData,
                       ),
               ),
-              if (isLoading || attendanceData.isEmpty) ...[
-                SizedBox(height: 540.h),
-              ] else ...[
-                SizedBox(height: 2.h),
-              ],
-              TextButton(
-                onPressed: _showFilterDialog,
-                child: Text(
-                  "Change Date/Shift",
-                  style: TextStyle(
-                    color: Color(0xFFED7902),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              // if (isLoading || attendanceData.isEmpty) ...[
+              //   SizedBox(height: 540.h),
+              // ] else ...[
+              //   SizedBox(height: 2.h),
+              // ],
+              //SizedBox(height: 2.h),
             ],
           ),
         ),
-      ),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          color: Colors.grey[400],
+          thickness: 1,
+          height: 1.h,
+        ),
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.only(bottom: 10.h),
+          child: TextButton(
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              _showFilterDialog();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFFED7902),
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                side: BorderSide(color: Colors.grey.shade100, width: 1.0),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              "Change Date/Shift",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        )
+      ]),
     );
   }
 
@@ -418,14 +458,18 @@ class ClassAttendanceSummary extends StatelessWidget {
   final List<AttendanceData> attendanceData;
 
   const ClassAttendanceSummary({
-    Key? key,
+    super.key,
     required this.attendanceData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 348.w,
+      //height: 570.h,
+      constraints: BoxConstraints(
+        maxHeight: 560.h, // Maximum height constraint
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4.r),
@@ -439,10 +483,24 @@ class ClassAttendanceSummary extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Add this to prevent unbounded height
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment:
+            CrossAxisAlignment.stretch, // Add this to prevent unbounded height
         children: [
           _buildHeader(),
-          _buildTable(), // Remove the Expanded wrapper
+          Flexible(
+            // Wrap the data table in an Expanded to take remaining space
+            child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              // Make only the data table scrollable
+              child: SizedBox(
+                // Match the width of the parent
+                width: 348.w,
+                child: _buildTable(),
+              ),
+            ),
+          ), // Rem
+          // Remove the Expanded wrapper
         ],
       ),
     );

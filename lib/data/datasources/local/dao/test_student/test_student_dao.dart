@@ -8,7 +8,7 @@ part 'test_student_dao.g.dart';
 @DriftAccessor(tables: [TestStudents])
 class TestStudentDao extends DatabaseAccessor<AppDatabase>
     with _$TestStudentDaoMixin {
-  TestStudentDao(AppDatabase db) : super(db);
+  TestStudentDao(super.db);
 
   Future<void> insertStudent(TestStudentsCompanion testStudent) async {
     await into(testStudents)

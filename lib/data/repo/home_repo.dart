@@ -8,7 +8,6 @@ import '../datasources/local/dao/dropdown/dropdown_options_dao.dart';
 import '../datasources/local/db/app_database.dart';
 
 class HomeRepo extends HttpService {
-
   static final AppDatabase _db = AppDatabase.instance;
   static final dropdownDao = DropdownDao(_db);
 
@@ -22,13 +21,14 @@ class HomeRepo extends HttpService {
     'ppsp'
   ];
 
-  Future<void> loginSyncLrDiv () async {
-
+  Future<void> loginSyncLrDiv() async {
     final tkn = await getBearerToken();
 
     final data = await post(
       API.buildUrl(API.getLoginSync),
-      data: {'sync_req': 'lr,div'},
+      data: {
+        'sync_req': 'lr,div'
+      }, //lr for leave reason, no use of div right now
       headers: {
         'Authorization': 'Bearer $tkn',
       },
@@ -41,31 +41,34 @@ class HomeRepo extends HttpService {
     //   final values = entry.value.split(',').map((e) => e.trim()); // Split and trim
     //   return values.map((value) => {'key': key, 'value': value});
     // }).toList();
-    final extractedData = (data['data'] as Map<String, dynamic>).entries.expand((entry) {
-      // final key = entry.key; // "lr" or "div"
-      // final values = (entry.value as String).split(',').map((e) => e.trim()); // Split and trim
-      // return values.map((value) => {'key': key, 'value': value});
-      final key = entry.key; // "lr" or "div"
-      final value = entry.value;
+    final extractedData = (data['data'] as Map<String, dynamic>)
+        .entries
+        .expand((entry) {
+          // final key = entry.key; // "lr" or "div"
+          // final values = (entry.value as String).split(',').map((e) => e.trim()); // Split and trim
+          // return values.map((value) => {'key': key, 'value': value});
+          final key = entry.key; // "lr" or "div"
+          final value = entry.value;
 
-      if (value is String) {
-        final values = value.split(',').map((e) => e.trim());
-        return values.map((v) => {'key': key, 'value': v});
-      } else {
-        Log.d('Unexpected value for key: $key, Value: $value');
-        return []; // Skip non-string values
-      }
-    }).toList().cast<Map<String, String>>();
+          if (value is String) {
+            final values = value.split(',').map((e) => e.trim());
+            return values.map((v) => {'key': key, 'value': v});
+          } else {
+            Log.d('Unexpected value for key: $key, Value: $value');
+            return []; // Skip non-string values
+          }
+        })
+        .toList()
+        .cast<Map<String, String>>();
     data['data'].entries.forEach((entry) {
-      Log.d('Key: ${entry.key}, Value: ${entry.value}, Type: ${entry.value.runtimeType}');
+      Log.d(
+          'Key: ${entry.key}, Value: ${entry.value}, Type: ${entry.value.runtimeType}');
     });
-
 
     Log.d(extractedData);
 
     // Insert into the database
     await dropdownDao.insertDropdownOptions(extractedData);
-
 
     final div = await dropdownDao.getDropdownValues('div');
 
@@ -75,7 +78,6 @@ class HomeRepo extends HttpService {
     Log.d(div);
 
     Log.d(lr);
-
   }
 
   Future<List<Map<String, String>>> fetchStudentData() async {

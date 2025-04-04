@@ -2,6 +2,7 @@ import 'package:ezskool/core/services/logger.dart';
 import 'package:ezskool/data/repo/home_repo.dart';
 import 'package:ezskool/data/viewmodels/class_attendance/class_attendance_home_viewmodel.dart';
 import 'package:ezskool/presentation/dialogs/custom_dialog.dart';
+import 'package:ezskool/presentation/drawers/calendar_bottom_drawer.dart';
 import 'package:ezskool/presentation/views/base_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,21 +64,10 @@ class _NewClassAttendanceHomeScreenState
 
     checkFirstLaunch();
 
-    // setState(() {
-    //   isLoading = true;
-    // });
-
-    // if (_isFirstLaunch) {
-    //   loadClassesOnce();
-    //
-    //   _isFirstLaunch = false;
-    // } else {
-    //   // If not first launch, just load cached data
-    //   //loadClasses();
-    // }
-    // loadClasses();
-    // getLoginSync('2');
-    // loadLD();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final stvm = Provider.of<StudentViewModel>(context, listen: false);
+      openBottomDrawerDropDown(context, stvm);
+    });
   }
 
   Future<void> checkFirstLaunch() async {
@@ -174,7 +164,7 @@ class _NewClassAttendanceHomeScreenState
 
               Container(
                 width: 268.w,
-                height: 44.h,
+                height: 48.h,
                 decoration: BoxDecoration(
                   color: const Color(0xFFED7902), // Orange background
                   borderRadius: BorderRadius.circular(6.r),
@@ -258,190 +248,194 @@ class _NewClassAttendanceHomeScreenState
                 width: double.infinity.w,
                 child: Column(
                   children: [
-                    Text(
-                      'Select Class',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16.sp,
-                        height: 1.5.h,
-                        color: Color(0xFFA29595),
-                      ),
-                    ),
-                    // SizedBox(height: 20),
-                    Padding(
-                      padding: EdgeInsets.all(16.r),
-                      child: isLoading
-                          ? Center(
-                              child: CircularProgressIndicator(
-                              color: Color(0xFFED7902),
-                            ))
-                          : GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              // Prevents inner scrolling
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4, // Three cards per row
-                                crossAxisSpacing:
-                                    16.w, // Spacing between columns
-                                mainAxisSpacing: 16.h, // Spacing between rows
-                                childAspectRatio:
-                                    80 / 77, // Card width-to-height ratio
-                              ),
-                              itemCount: cardData.length,
-                              itemBuilder: (context, index) {
-                                List<bool> isToggled =
-                                    List.filled(cardData.length, false);
-                                final isSelected =
-                                    tempClass == cardData[index]['title'];
-                                final data = cardData[index];
-                                // To track card color state
-                                return GestureDetector(
-                                  onTap: () async {
-                                    HapticFeedback.selectionClick();
-                                    startShowing(context);
-                                    setState(() {
-                                      tempClass = cardData[index]['title'];
-                                    });
-                                    viewModel.selectedClass = tempClass!;
-                                    // await Future.delayed(
-                                    //     const Duration(milliseconds: 80));
+                    _buildDropdownField(() {
+                      HapticFeedback.mediumImpact();
+                      openBottomDrawerDropDown(context, stvm);
+                    }, viewModel),
+                    // Text(
+                    //   'Select Class',
+                    //   style: TextStyle(
+                    //     fontWeight: FontWeight.w400,
+                    //     fontSize: 16.sp,
+                    //     height: 1.5.h,
+                    //     color: Color(0xFFA29595),
+                    //   ),
+                    // ),
+                    // // SizedBox(height: 20),
+                    // Padding(
+                    //   padding: EdgeInsets.all(16.r),
+                    //   child: isLoading
+                    //       ? Center(
+                    //           child: CircularProgressIndicator(
+                    //           color: Color(0xFFED7902),
+                    //         ))
+                    //       : GridView.builder(
+                    //           shrinkWrap: true,
+                    //           physics: const NeverScrollableScrollPhysics(),
+                    //           // Prevents inner scrolling
+                    //           gridDelegate:
+                    //               SliverGridDelegateWithFixedCrossAxisCount(
+                    //             crossAxisCount: 4, // Three cards per row
+                    //             crossAxisSpacing:
+                    //                 16.w, // Spacing between columns
+                    //             mainAxisSpacing: 16.h, // Spacing between rows
+                    //             childAspectRatio:
+                    //                 80 / 77, // Card width-to-height ratio
+                    //           ),
+                    //           itemCount: cardData.length,
+                    //           itemBuilder: (context, index) {
+                    //             List<bool> isToggled =
+                    //                 List.filled(cardData.length, false);
+                    //             final isSelected =
+                    //                 tempClass == cardData[index]['title'];
+                    //             final data = cardData[index];
+                    //             // To track card color state
+                    //             return GestureDetector(
+                    //               onTap: () async {
+                    //                 HapticFeedback.selectionClick();
+                    //                 startShowing(context);
+                    //                 setState(() {
+                    //                   tempClass = cardData[index]['title'];
+                    //                 });
+                    //                 viewModel.selectedClass = tempClass!;
+                    //                 // await Future.delayed(
+                    //                 //     const Duration(milliseconds: 80));
 
-                                    stvm.setClassName(data['title']);
+                    //                 stvm.setClassName(data['title']);
 
-                                    classId = cardData[index]['classId'];
-                                    stopShowing(context);
-                                  },
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Color(0xFF33CC99)
-                                          : Color(0xFFED7902),
-                                      border: Border.all(
-                                          color: const Color(0xFFE2E2E2),
-                                          width: 1.w),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.25),
-                                          offset: const Offset(0, 2),
-                                          blurRadius: 4,
-                                          spreadRadius: 1,
-                                        ),
-                                      ],
-                                      borderRadius: BorderRadius.circular(5.r),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          width: 40.w, // Line width
-                                          height: 1.h, // Line height
-                                          color: Colors.white, // Line color
-                                          margin: EdgeInsets.symmetric(
-                                              vertical: 4.h),
-                                        ),
-                                        SizedBox(height: 4.h),
-                                        Text(
-                                          cardData[index]['title']
-                                              .toString()
-                                              .replaceAll(' ', '-'),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 24.sp,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4.h),
-                                        Container(
-                                          width: 40.w, // Line width
-                                          height: 1.h, // Line height
-                                          color: Colors.white, // Line color
-                                          margin: EdgeInsets.symmetric(
-                                              vertical: 4.w),
-                                        ),
-                                        // Text(
-                                        //   '${cardData[index]['count']}',
-                                        //   style: const TextStyle(
-                                        //     fontWeight: FontWeight.w500,
-                                        //     fontSize: 14,
-                                        //     color: Colors.white,
-                                        //   ),
-                                        // ),
-                                        // const SizedBox(height: 4),
-                                        // Text(
-                                        //   cardData[index]['label'],
-                                        //   style: const TextStyle(
-                                        //     fontWeight: FontWeight.w400,
-                                        //     fontSize: 10,
-                                        //     color: Color(0xFFE2E2E2),
-                                        //   ),
-                                        // ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                    //                 classId = cardData[index]['classId'];
+                    //                 stopShowing(context);
+                    //               },
+                    //               child: AnimatedContainer(
+                    //                 duration: const Duration(milliseconds: 300),
+                    //                 decoration: BoxDecoration(
+                    //                   color: isSelected
+                    //                       ? Color(0xFF33CC99)
+                    //                       : Color(0xFFED7902),
+                    //                   border: Border.all(
+                    //                       color: const Color(0xFFE2E2E2),
+                    //                       width: 1.w),
+                    //                   boxShadow: [
+                    //                     BoxShadow(
+                    //                       color: Colors.black.withOpacity(0.25),
+                    //                       offset: const Offset(0, 2),
+                    //                       blurRadius: 4,
+                    //                       spreadRadius: 1,
+                    //                     ),
+                    //                   ],
+                    //                   borderRadius: BorderRadius.circular(5.r),
+                    //                 ),
+                    //                 child: Column(
+                    //                   mainAxisAlignment:
+                    //                       MainAxisAlignment.center,
+                    //                   children: [
+                    //                     Container(
+                    //                       width: 40.w, // Line width
+                    //                       height: 1.h, // Line height
+                    //                       color: Colors.white, // Line color
+                    //                       margin: EdgeInsets.symmetric(
+                    //                           vertical: 4.h),
+                    //                     ),
+                    //                     SizedBox(height: 4.h),
+                    //                     Text(
+                    //                       cardData[index]['title']
+                    //                           .toString()
+                    //                           .replaceAll(' ', '-'),
+                    //                       style: TextStyle(
+                    //                         fontWeight: FontWeight.w600,
+                    //                         fontSize: 24.sp,
+                    //                         color: Colors.white,
+                    //                       ),
+                    //                     ),
+                    //                     SizedBox(height: 4.h),
+                    //                     Container(
+                    //                       width: 40.w, // Line width
+                    //                       height: 1.h, // Line height
+                    //                       color: Colors.white, // Line color
+                    //                       margin: EdgeInsets.symmetric(
+                    //                           vertical: 4.w),
+                    //                     ),
+                    //                     // Text(
+                    //                     //   '${cardData[index]['count']}',
+                    //                     //   style: const TextStyle(
+                    //                     //     fontWeight: FontWeight.w500,
+                    //                     //     fontSize: 14,
+                    //                     //     color: Colors.white,
+                    //                     //   ),
+                    //                     // ),
+                    //                     // const SizedBox(height: 4),
+                    //                     // Text(
+                    //                     //   cardData[index]['label'],
+                    //                     //   style: const TextStyle(
+                    //                     //     fontWeight: FontWeight.w400,
+                    //                     //     fontSize: 10,
+                    //                     //     color: Color(0xFFE2E2E2),
+                    //                     //   ),
+                    //                     // ),
+                    //                   ],
+                    //                 ),
+                    //               ),
+                    //             );
+                    //           },
+                    //         ),
 
-                      // GridView.builder(
-                      //   padding: EdgeInsets.symmetric(
-                      //     horizontal: 32.w,),
-                      //   shrinkWrap: true,
-                      //   itemCount: standards.length,
-                      //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      //     crossAxisCount: 4,
-                      //     crossAxisSpacing: 20.w,
-                      //     mainAxisSpacing: 20.h,
-                      //   ),
-                      //   itemBuilder: (context, index) {
-                      //     final isSelected = tempStandard == standards[index];
-                      //     return GestureDetector(
-                      //       onTap: () {
-                      //         setState(() {
-                      //           tempStandard = standards[index];
-                      //         });
-                      //         viewModel.selectedStandard = tempStandard!;
-                      //       },
-                      //       child: Container(
-                      //         height: 51.h,
-                      //         width: 58.w,
-                      //         decoration: BoxDecoration(
-                      //           color: isSelected
-                      //               ? Color(0xFFED7902)
-                      //               : Color(0xFFFFE8D1),
-                      //           border: Border.all(color: Color(0xFFE2E2E2)),
-                      //           borderRadius: BorderRadius.circular(
-                      //               5.r),
-                      //           boxShadow: [
-                      //             BoxShadow(
-                      //               color: Colors.black
-                      //                   .withOpacity(0.25),
-                      //               offset: Offset(0.w,
-                      //                   2.h),
-                      //               blurRadius: 4.r,
-                      //             ),
-                      //           ],
-                      //         ),
-                      //         child: Center(
-                      //           child: Text(
-                      //             standards[index],
-                      //             style: TextStyle(
-                      //               fontWeight: FontWeight.w600,
-                      //               fontSize: 24.sp,
-                      //               height: 1.5.h,
-                      //               color: isSelected
-                      //                   ? Color(0xFFF5F5F7)
-                      //                   : Color(0xFF494949),
-                      //             ),
-                      //           ),
-                      //         ),
-                      //       ),
-                      //     );
-                      //   },
-                      // ),
-                    )
+                    //   // GridView.builder(
+                    //   //   padding: EdgeInsets.symmetric(
+                    //   //     horizontal: 32.w,),
+                    //   //   shrinkWrap: true,
+                    //   //   itemCount: standards.length,
+                    //   //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    //   //     crossAxisCount: 4,
+                    //   //     crossAxisSpacing: 20.w,
+                    //   //     mainAxisSpacing: 20.h,
+                    //   //   ),
+                    //   //   itemBuilder: (context, index) {
+                    //   //     final isSelected = tempStandard == standards[index];
+                    //   //     return GestureDetector(
+                    //   //       onTap: () {
+                    //   //         setState(() {
+                    //   //           tempStandard = standards[index];
+                    //   //         });
+                    //   //         viewModel.selectedStandard = tempStandard!;
+                    //   //       },
+                    //   //       child: Container(
+                    //   //         height: 51.h,
+                    //   //         width: 58.w,
+                    //   //         decoration: BoxDecoration(
+                    //   //           color: isSelected
+                    //   //               ? Color(0xFFED7902)
+                    //   //               : Color(0xFFFFE8D1),
+                    //   //           border: Border.all(color: Color(0xFFE2E2E2)),
+                    //   //           borderRadius: BorderRadius.circular(
+                    //   //               5.r),
+                    //   //           boxShadow: [
+                    //   //             BoxShadow(
+                    //   //               color: Colors.black
+                    //   //                   .withOpacity(0.25),
+                    //   //               offset: Offset(0.w,
+                    //   //                   2.h),
+                    //   //               blurRadius: 4.r,
+                    //   //             ),
+                    //   //           ],
+                    //   //         ),
+                    //   //         child: Center(
+                    //   //           child: Text(
+                    //   //             standards[index],
+                    //   //             style: TextStyle(
+                    //   //               fontWeight: FontWeight.w600,
+                    //   //               fontSize: 24.sp,
+                    //   //               height: 1.5.h,
+                    //   //               color: isSelected
+                    //   //                   ? Color(0xFFF5F5F7)
+                    //   //                   : Color(0xFF494949),
+                    //   //             ),
+                    //   //           ),
+                    //   //         ),
+                    //   //       ),
+                    //   //     );
+                    //   //   },
+                    //   // ),
+                    // )
                   ],
                 ),
               ),
@@ -471,12 +465,7 @@ class _NewClassAttendanceHomeScreenState
                     // Button 1: Gray background
                     ElevatedButton(
                       onPressed: () {
-                        // viewModel.selectedDivision = '';
-                        // viewModel.selectedStandard = '';
-                        // setState(() {
-                        //   tempDivision = '';
-                        //   tempStandard = '';
-                        // });
+                        //Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xF5F5F5F5),
@@ -593,192 +582,499 @@ class _NewClassAttendanceHomeScreenState
       ),
     );
   }
-}
 
-class CalendarBottomSheet extends StatefulWidget {
-  final DateTime initialDate;
-  final ValueChanged<DateTime> onDateSelected;
-  final String hintText;
-
-  const CalendarBottomSheet(
-      {super.key,
-      required this.initialDate,
-      required this.onDateSelected,
-      this.hintText = ''});
-
-  @override
-  _CalendarBottomSheetState createState() => _CalendarBottomSheetState();
-}
-
-class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
-  late DateTime selectedDate;
-
-  @override
-  void initState() {
-    super.initState();
-    selectedDate = widget.initialDate;
-  }
-
-  void _changeMonth(int offset) {
-    setState(() {
-      selectedDate = DateTime(
-          selectedDate.year, selectedDate.month + offset, selectedDate.day);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final currentMonth = DateFormat('MMMM yyyy').format(selectedDate);
-    final firstDayOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
-    final lastDayOfMonth =
-        DateTime(selectedDate.year, selectedDate.month + 1, 0);
-    final days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    final firstWeekdayOfMonth = firstDayOfMonth.weekday % 7;
-    final totalDays = firstWeekdayOfMonth + lastDayOfMonth.day;
-    final totalWeeks = ((totalDays + 6) ~/ 7);
-    final today = DateTime.now();
-
-    return Container(
-      padding: EdgeInsets.all(24.r),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 4.h,
-            width: 164.w,
-            decoration: BoxDecoration(
-              color: Color(0xFFD9D9D9),
-              borderRadius: BorderRadius.circular(22.r),
-            ),
+  Widget _buildDropdownField(
+      VoidCallback onTap, ClassAttendanceHomeViewModel viewModel) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(10.r),
+        height: 48.h,
+        width: 268.w,
+        decoration: BoxDecoration(
+          color: Color(0xFFED7902),
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(
+            color: Colors.white,
+            width: 2.w,
           ),
-
-          if (widget.hintText.isNotEmpty) ...[
-            SizedBox(height: 15.h),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 7.1.r,
+              offset: Offset(0.w, 3.h),
+            ),
+          ],
+        ),
+        child: Row(
+          //crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(width: 10.w),
             Text(
-              widget.hintText,
-              textAlign: TextAlign.center,
+              viewModel.selectedClass.isNotEmpty
+                  ? 'Class : ${viewModel.selectedClass}'
+                  : 'Select Class',
               style: TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: 15.sp,
-                color: Color(0xFFA29595),
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(right: 12.w),
+              child: Icon(
+                Icons.arrow_right,
+                color: Colors.white,
               ),
             ),
           ],
-
-          SizedBox(height: 20.h),
-          // Month navigation row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_left, color: Colors.black),
-                onPressed: () => _changeMonth(-1),
-              ),
-              Text(
-                currentMonth,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.arrow_right, color: Colors.black),
-                onPressed: () => _changeMonth(1),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          // Days of the week header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: days.map((day) {
-              // Convert weekday to match the days list index (Sunday = 0)
-              final currentWeekday = selectedDate.weekday % 7;
-              final isSelectedDay = days.indexOf(day) == currentWeekday;
-
-              return Expanded(
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 4.h),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color:
-                        isSelectedDay ? Color(0xFFED7902) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(5.r),
-                  ),
-                  child: Text(
-                    day,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: isSelectedDay ? Colors.white : Colors.black54,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 8.h),
-          // Calendar grid
-          GridView.count(
-            shrinkWrap: true,
-            crossAxisCount: 7,
-            childAspectRatio: 1.0,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            children: List.generate(totalWeeks * 7, (index) {
-              final dayOffset = index - firstWeekdayOfMonth;
-              if (dayOffset < 0 || dayOffset >= lastDayOfMonth.day) {
-                return Container(); // Empty space
-              }
-
-              final date = DateTime(
-                  selectedDate.year, selectedDate.month, dayOffset + 1);
-              final isSelected = selectedDate.year == date.year &&
-                  selectedDate.month == date.month &&
-                  selectedDate.day == date.day;
-
-              final isFutureDate = date.isAfter(today);
-
-              return InkWell(
-                onTap: isFutureDate
-                    ? null
-                    : () {
-                        setState(() {
-                          selectedDate = date;
-                        });
-                        widget.onDateSelected(selectedDate);
-                        Navigator.pop(context); // Close the bottom sheet
-                      },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Color(0xFFED7902)
-                        : (isFutureDate ? Colors.grey.shade200 : Colors.white),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    "${dayOffset + 1}",
-                    style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : (isFutureDate ? Colors.grey : Colors.black),
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ),
-          SizedBox(height: 20.h),
-        ],
+        ),
       ),
     );
   }
+
+  void openBottomDrawerDropDown(BuildContext context, StudentViewModel stvm) {
+    final viewModel =
+        Provider.of<ClassAttendanceHomeViewModel>(context, listen: false);
+
+    String? tempStandard = viewModel.selectedStandard;
+    String? tempDivision = viewModel.selectedDivision;
+    String? tempClass = viewModel.selectedClass;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return GestureDetector(
+            onTap: () {},
+            child: Container(
+              height: 550.h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(36.r),
+                  topRight: Radius.circular(36.r),
+                ),
+                color: Colors.white,
+              ),
+              child: Column(
+                children: [
+                  SizedBox(height: 13.h),
+                  Container(
+                    height: 4.h,
+                    width: 164.w,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFD9D9D9),
+                      borderRadius: BorderRadius.circular(22.r),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+
+                  SizedBox(
+                      // height: 450.h,
+                      // width: double.infinity.w,
+                      child: Column(children: [
+                    Text(
+                      'Select Class',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16.sp,
+                        height: 1.5.h,
+                        color: Color(0xFFA29595),
+                      ),
+                    ),
+                    // SizedBox(height: 20),
+                    Padding(
+                      padding: EdgeInsets.all(32.r),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: AlwaysScrollableScrollPhysics(),
+                        // Prevents inner scrolling
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          // Three cards per row
+                          crossAxisSpacing: 16.w,
+                          // Spacing between columns
+                          mainAxisSpacing: 16.h,
+                          // Spacing between rows
+                          childAspectRatio:
+                              80 / 77, // Card width-to-height ratio
+                        ),
+                        itemCount: cardData.length,
+                        itemBuilder: (context, index) {
+                          List<bool> isToggled =
+                              List.filled(cardData.length, false);
+                          final isSelected =
+                              tempClass == cardData[index]['title'];
+                          final data = cardData[index];
+                          // To track card color state
+                          return GestureDetector(
+                            onTap: () async {
+                              HapticFeedback.selectionClick();
+                              startShowing(context);
+                              setState(() {
+                                tempClass = cardData[index]['title'];
+                              });
+                              viewModel.selectedClass = tempClass!;
+                              // await Future.delayed(
+                              //     const Duration(milliseconds: 80));
+
+                              stvm.setClassName(data['title']);
+
+                              classId = cardData[index]['classId'];
+                              stopShowing(context);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Color(0xFF33CC99)
+                                    : Color(0xFFED7902),
+                                border: Border.all(
+                                    color: const Color(0xFFE2E2E2), width: 1.w),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.25),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                                borderRadius: BorderRadius.circular(5.r),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 40.w, // Line width
+                                    height: 1.h, // Line height
+                                    color: Colors.white, // Line color
+                                    margin: EdgeInsets.symmetric(vertical: 4.h),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    cardData[index]['title'].toString(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 24.sp,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Container(
+                                    width: 40.w, // Line width
+                                    height: 1.h, // Line height
+                                    color: Colors.white, // Line color
+                                    margin: EdgeInsets.symmetric(vertical: 4.w),
+                                  ),
+                                  // Text(
+                                  //   '${cardData[index]['count']}',
+                                  //   style: const TextStyle(
+                                  //     fontWeight: FontWeight.w500,
+                                  //     fontSize: 14,
+                                  //     color: Colors.white,
+                                  //   ),
+                                  // ),
+                                  // const SizedBox(height: 4),
+                                  // Text(
+                                  //   cardData[index]['label'],
+                                  //   style: const TextStyle(
+                                  //     fontWeight: FontWeight.w400,
+                                  //     fontSize: 10,
+                                  //     color: Color(0xFFE2E2E2),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  ])),
+
+                  SizedBox(
+                    height: 15.h,
+                  ),
+
+                  Divider(
+                    indent: 20.w,
+                    endIndent: 20.w,
+                    color: Colors.grey[400],
+                    thickness: 1,
+                    height: 1.h,
+                  ),
+                  // SizedBox(height: 5,),
+                  Padding(
+                    padding: EdgeInsets.all(16.r),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Button 1: Gray background
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xF5F5F5F5),
+                            // Gray background
+                            shadowColor: Colors.black.withOpacity(0.5),
+                            // Drop shadow
+                            elevation: 4,
+                            // Shadow elevation
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(5.r), // Rounded corners
+                            ),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 22.w, vertical: 10.h),
+                          ),
+                          child: Text(
+                            "Cancel", // Replace with actual text
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14.sp,
+                              letterSpacing: 0.4.w,
+                              color: Color(0xFF494949), // Text color
+                            ),
+                          ),
+                        ),
+                        // Button 2: Orange background
+                        SizedBox(width: 20),
+
+                        ElevatedButton(
+                          onPressed: () {
+                            if (tempClass != null) {
+                              viewModel.updateClass(tempClass!);
+                            }
+
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFED7902),
+                            // Orange background
+                            shadowColor: Colors.black.withOpacity(0.5),
+                            // Drop shadow
+                            elevation: 4,
+                            // Shadow elevation
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(5.r), // Rounded corners
+                            ),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 22.w, vertical: 10.h),
+                          ),
+                          child: Text(
+                            "OK", // Replace with actual text
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14.sp,
+                              letterSpacing: 0.4.w,
+                              color: Color(0xFFFAECEC), // Text color
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
 }
+
+// class CalendarBottomSheet extends StatefulWidget {
+//   final DateTime initialDate;
+//   final ValueChanged<DateTime> onDateSelected;
+//   final String hintText;
+
+//   const CalendarBottomSheet(
+//       {super.key,
+//       required this.initialDate,
+//       required this.onDateSelected,
+//       this.hintText = ''});
+
+//   @override
+//   _CalendarBottomSheetState createState() => _CalendarBottomSheetState();
+// }
+
+// class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
+//   late DateTime selectedDate;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     selectedDate = widget.initialDate;
+//   }
+
+//   void _changeMonth(int offset) {
+//     setState(() {
+//       selectedDate = DateTime(
+//           selectedDate.year, selectedDate.month + offset, selectedDate.day);
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final currentMonth = DateFormat('MMMM yyyy').format(selectedDate);
+//     final firstDayOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
+//     final lastDayOfMonth =
+//         DateTime(selectedDate.year, selectedDate.month + 1, 0);
+//     final days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+//     final firstWeekdayOfMonth = firstDayOfMonth.weekday % 7;
+//     final totalDays = firstWeekdayOfMonth + lastDayOfMonth.day;
+//     final totalWeeks = ((totalDays + 6) ~/ 7);
+//     final today = DateTime.now();
+
+//     return Container(
+//       padding: EdgeInsets.all(24.r),
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Container(
+//             height: 4.h,
+//             width: 164.w,
+//             decoration: BoxDecoration(
+//               color: Color(0xFFD9D9D9),
+//               borderRadius: BorderRadius.circular(22.r),
+//             ),
+//           ),
+
+//           if (widget.hintText.isNotEmpty) ...[
+//             SizedBox(height: 15.h),
+//             Text(
+//               widget.hintText,
+//               textAlign: TextAlign.center,
+//               style: TextStyle(
+//                 fontWeight: FontWeight.w500,
+//                 fontSize: 15.sp,
+//                 color: Color(0xFF494949),
+//               ),
+//             ),
+//           ],
+
+//           SizedBox(height: 20.h),
+//           // Month navigation row
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               IconButton(
+//                 icon: Icon(Icons.arrow_left, color: Colors.black),
+//                 onPressed: () => _changeMonth(-1),
+//               ),
+//               Text(
+//                 currentMonth,
+//                 style: TextStyle(
+//                   fontSize: 16.sp,
+//                   fontWeight: FontWeight.bold,
+//                 ),
+//               ),
+//               IconButton(
+//                 icon: Icon(Icons.arrow_right, color: Colors.black),
+//                 onPressed: () => _changeMonth(1),
+//               ),
+//             ],
+//           ),
+//           SizedBox(height: 16.h),
+//           // Days of the week header
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: days.map((day) {
+//               // Convert weekday to match the days list index (Sunday = 0)
+//               final currentWeekday = selectedDate.weekday % 7;
+//               final isSelectedDay = days.indexOf(day) == currentWeekday;
+
+//               return Expanded(
+//                 child: Container(
+//                   padding: EdgeInsets.symmetric(vertical: 4.h),
+//                   alignment: Alignment.center,
+//                   decoration: BoxDecoration(
+//                     color:
+//                         isSelectedDay ? Color(0xFFED7902) : Colors.transparent,
+//                     borderRadius: BorderRadius.circular(5.r),
+//                   ),
+//                   child: Text(
+//                     day,
+//                     style: TextStyle(
+//                       fontSize: 14.sp,
+//                       color: isSelectedDay ? Colors.white : Colors.black54,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                 ),
+//               );
+//             }).toList(),
+//           ),
+//           SizedBox(height: 8.h),
+//           // Calendar grid
+//           GridView.count(
+//             shrinkWrap: true,
+//             crossAxisCount: 7,
+//             childAspectRatio: 1.0,
+//             mainAxisSpacing: 8,
+//             crossAxisSpacing: 8,
+//             children: List.generate(totalWeeks * 7, (index) {
+//               final dayOffset = index - firstWeekdayOfMonth;
+//               if (dayOffset < 0 || dayOffset >= lastDayOfMonth.day) {
+//                 return Container(); // Empty space
+//               }
+
+//               final date = DateTime(
+//                   selectedDate.year, selectedDate.month, dayOffset + 1);
+//               final isSelected = selectedDate.year == date.year &&
+//                   selectedDate.month == date.month &&
+//                   selectedDate.day == date.day;
+
+//               final isFutureDate = date.isAfter(today);
+
+//               return InkWell(
+//                 onTap: isFutureDate
+//                     ? null
+//                     : () {
+//                         setState(() {
+//                           selectedDate = date;
+//                         });
+//                         widget.onDateSelected(selectedDate);
+//                         Navigator.pop(context); // Close the bottom sheet
+//                       },
+//                 child: Container(
+//                   decoration: BoxDecoration(
+//                     color: isSelected
+//                         ? Color(0xFFED7902)
+//                         : (isFutureDate ? Colors.grey.shade200 : Colors.white),
+//                     shape: BoxShape.circle,
+//                   ),
+//                   alignment: Alignment.center,
+//                   child: Text(
+//                     "${dayOffset + 1}",
+//                     style: TextStyle(
+//                       color: isSelected
+//                           ? Colors.white
+//                           : (isFutureDate ? Colors.grey : Colors.black),
+//                       fontWeight:
+//                           isSelected ? FontWeight.bold : FontWeight.normal,
+//                     ),
+//                   ),
+//                 ),
+//               );
+//             }),
+//           ),
+//           SizedBox(height: 20.h),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 // import 'package:ezskool/core/services/logger.dart';
 // import 'package:ezskool/data/repo/home_repo.dart';

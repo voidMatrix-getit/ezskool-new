@@ -6,11 +6,12 @@ part 'class_dao.g.dart';
 
 @DriftAccessor(tables: [Classes])
 class ClassDao extends DatabaseAccessor<AppDatabase> with _$ClassDaoMixin {
-  ClassDao(AppDatabase db) : super(db);
+  ClassDao(super.db);
 
   /// Insert or replace a class
   Future<void> insertClass(ClassesCompanion classCompanion) async {
-    await into(classes).insert(classCompanion, mode: InsertMode.insertOrReplace);
+    await into(classes)
+        .insert(classCompanion, mode: InsertMode.insertOrReplace);
   }
 
   /// Get all classes
@@ -47,7 +48,8 @@ class ClassDao extends DatabaseAccessor<AppDatabase> with _$ClassDaoMixin {
   }
 
   Future<int?> getClassIdByName(String className) async {
-    final query = select(classes)..where((tbl) => tbl.className.equals(className));
+    final query = select(classes)
+      ..where((tbl) => tbl.className.equals(className));
     final classRow = await query.getSingleOrNull();
 
     return classRow?.id; // Return ID if found, otherwise return null
@@ -57,8 +59,7 @@ class ClassDao extends DatabaseAccessor<AppDatabase> with _$ClassDaoMixin {
     final query = select(classes)..where((tbl) => tbl.id.equals(classId));
     final classRow = await query.getSingleOrNull();
 
-    return classRow?.className; // Return class name if found, otherwise return null
+    return classRow
+        ?.className; // Return class name if found, otherwise return null
   }
-
-
 }

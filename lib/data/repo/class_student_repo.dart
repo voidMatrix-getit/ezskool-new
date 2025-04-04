@@ -21,6 +21,7 @@ class ClassStudentRepo extends HttpService {
       String shiftId,
       String classId,
       String absentRollNo,
+      String presentRollNo,
       String action,
       String classAttId,
       String totalAbsent,
@@ -29,42 +30,60 @@ class ClassStudentRepo extends HttpService {
 
     final tkn = await getBearerToken();
 
-    if (action == '1') {
-      data = await post(
-        API.buildUrl(API.markClassAttendance),
-        data: {
-          'att_date': attDate,
-          'ay_id': ayId,
-          if (shiftId.isNotEmpty) 'shift_id': shiftId,
-          'class_id': classId,
-          'absent_roll_no': absentRollNo,
-          if (action.isNotEmpty) 'action': action,
-          'ta': totalAbsent,
-          'tp': totalPresent
-        },
-        headers: {
-          'Authorization': 'Bearer $tkn',
-        },
-      );
-    } else {
-      data = await post(
-        API.buildUrl(API.markClassAttendance),
-        data: {
-          'att_date': attDate,
-          'ay_id': ayId,
-          if (shiftId.isNotEmpty) 'shift_id': shiftId,
-          'class_id': classId,
-          'absent_roll_no': absentRollNo,
-          if (action.isNotEmpty) 'action': action,
-          if (action.isNotEmpty) 'class_att_id': classAttId,
-          'ta': totalAbsent,
-          'tp': totalPresent
-        },
-        headers: {
-          'Authorization': 'Bearer $tkn',
-        },
-      );
-    }
+    data = await post(
+      API.buildUrl(API.markClassAttendance),
+      data: {
+        'att_date': attDate,
+        'ay_id': ayId,
+        if (shiftId.isNotEmpty) 'shift_id': shiftId,
+        'class_id': classId,
+        'arn': absentRollNo,
+        'prn': presentRollNo,
+        'class_att_id': classAttId,
+        'ta': totalAbsent,
+        'tp': totalPresent
+      },
+      headers: {
+        'Authorization': 'Bearer $tkn',
+      },
+    );
+
+    // if (action == '1') {
+    //   data = await post(
+    //     API.buildUrl(API.markClassAttendance),
+    //     data: {
+    //       'att_date': attDate,
+    //       'ay_id': ayId,
+    //       if (shiftId.isNotEmpty) 'shift_id': shiftId,
+    //       'class_id': classId,
+    //       'absent_roll_no': absentRollNo,
+    //       if (action.isNotEmpty) 'action': action,
+    //       'ta': totalAbsent,
+    //       'tp': totalPresent
+    //     },
+    //     headers: {
+    //       'Authorization': 'Bearer $tkn',
+    //     },
+    //   );
+    // } else {
+    //   data = await post(
+    //     API.buildUrl(API.markClassAttendance),
+    //     data: {
+    //       'att_date': attDate,
+    //       'ay_id': ayId,
+    //       if (shiftId.isNotEmpty) 'shift_id': shiftId,
+    //       'class_id': classId,
+    //       'absent_roll_no': absentRollNo,
+    //       if (action.isNotEmpty) 'action': action,
+    //       if (action.isNotEmpty) 'class_att_id': classAttId,
+    //       'ta': totalAbsent,
+    //       'tp': totalPresent
+    //     },
+    //     headers: {
+    //       'Authorization': 'Bearer $tkn',
+    //     },
+    //   );
+    // }
 
     Log.d(data);
     if (data['success']) {

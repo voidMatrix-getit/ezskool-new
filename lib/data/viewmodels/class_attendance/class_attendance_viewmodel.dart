@@ -235,50 +235,50 @@ class ClassAttendanceViewModel extends ChangeNotifier {
   AttendanceData getAttendanceData() {
     final classHome =
         Provider.of<ClassAttendanceHomeViewModel>(context, listen: false);
-    String cls;
-    final cl = classHome.selectedClass.split(' ');
-    Log.d(cl);
+    String cls = classHome.selectedClass;
+    // final cl = classHome.selectedClass.split(' ');
+    // Log.d(cl);
 
-    if (cl.isEmpty) {
-      cls =
-          classHome.selectedClass; // Use the original string if no split occurs
-    } else if (cl.length == 1) {
-      // Add ordinal suffix for single-digit numbers
-      String classSuffix;
-      switch (cl[0]) {
-        case '1':
-          classSuffix = 'st';
-          break;
-        case '2':
-          classSuffix = 'nd';
-          break;
-        case '3':
-          classSuffix = 'rd';
-          break;
-        default:
-          classSuffix = 'th';
-      }
-      cls =
-          '${cl[0]}$classSuffix'; // Only the number with suffix if no additional text
-    } else {
-      // Ordinal suffix logic for multi-word class names
-      String classSuffix;
-      switch (cl[0]) {
-        case '1':
-          classSuffix = 'st';
-          break;
-        case '2':
-          classSuffix = 'nd';
-          break;
-        case '3':
-          classSuffix = 'rd';
-          break;
-        default:
-          classSuffix = 'th';
-      }
+    // if (cl.isEmpty) {
+    //   cls =
+    //       classHome.selectedClass; // Use the original string if no split occurs
+    // } else if (cl.length == 1) {
+    //   // Add ordinal suffix for single-digit numbers
+    //   String classSuffix;
+    //   switch (cl[0]) {
+    //     case '1':
+    //       classSuffix = 'st';
+    //       break;
+    //     case '2':
+    //       classSuffix = 'nd';
+    //       break;
+    //     case '3':
+    //       classSuffix = 'rd';
+    //       break;
+    //     default:
+    //       classSuffix = 'th';
+    //   }
+    //   cls =
+    //       '${cl[0]}$classSuffix'; // Only the number with suffix if no additional text
+    // } else {
+    //   // Ordinal suffix logic for multi-word class names
+    //   String classSuffix;
+    //   switch (cl[0]) {
+    //     case '1':
+    //       classSuffix = 'st';
+    //       break;
+    //     case '2':
+    //       classSuffix = 'nd';
+    //       break;
+    //     case '3':
+    //       classSuffix = 'rd';
+    //       break;
+    //     default:
+    //       classSuffix = 'th';
+    //   }
 
-      cls = '${cl[0]}$classSuffix ${cl[1]}';
-    }
+    //   cls = '${cl[0]}$classSuffix ${cl[1]}';
+    // }
     return AttendanceData(
       currentDate: DateFormat('dd MMM yyyy').format(DateTime.now()),
       currentClass: cls,

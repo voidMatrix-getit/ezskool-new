@@ -6,7 +6,7 @@ part 'student_dao.g.dart';
 
 @DriftAccessor(tables: [Students])
 class StudentDao extends DatabaseAccessor<AppDatabase> with _$StudentDaoMixin {
-  StudentDao(AppDatabase db) : super(db);
+  StudentDao(super.db);
 
   Future<void> insertStudent(StudentsCompanion student) async {
     await into(students).insert(student, mode: InsertMode.insertOrReplace);
@@ -34,7 +34,8 @@ class StudentDao extends DatabaseAccessor<AppDatabase> with _$StudentDaoMixin {
   /// Get a specific student by ID
   Future<Student?> getStudentById(String id) async {
     final query = select(students)..where((tbl) => tbl.id.equals(id));
-    final studentRow = await query.getSingleOrNull(); // Returns null if not found
+    final studentRow =
+        await query.getSingleOrNull(); // Returns null if not found
     if (studentRow != null) {
       return Student(
         id: studentRow.id,

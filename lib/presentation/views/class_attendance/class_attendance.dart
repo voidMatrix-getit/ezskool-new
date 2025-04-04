@@ -16,7 +16,6 @@ import 'package:provider/provider.dart';
 import '../../../data/datasources/local/db/app_database.dart';
 import '../../../data/viewmodels/class_attendance/class_attendance_home_viewmodel.dart';
 import '../../../main.dart';
-import '../../dialogs/custom_dialog.dart';
 import '../../drawers/class_attendance_drawer.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -516,6 +515,7 @@ class ClassAttendanceScreen extends StatelessWidget {
                                 ? absentData
                                 : []),
                             action,
+                            '',
                             viewModel.classAttId.toString(),
                             viewModel.absentRollNumbers.length.toString(),
                             viewModel.presentRollNumbers.length.toString());

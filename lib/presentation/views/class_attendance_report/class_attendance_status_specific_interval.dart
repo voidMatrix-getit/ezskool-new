@@ -2,7 +2,7 @@ import 'package:ezskool/core/services/logger.dart';
 import 'package:ezskool/data/repo/student_repo.dart';
 import 'package:ezskool/data/viewmodels/class_attendance/class_attendance_home_viewmodel.dart';
 import 'package:ezskool/data/viewmodels/class_attendance/student_listing_viewmodel.dart';
-import 'package:ezskool/presentation/views/class_attendance/new_class_attendance_home_screen.dart';
+import 'package:ezskool/presentation/drawers/calendar_bottom_drawer.dart';
 import 'package:ezskool/presentation/widgets/custom_buttons.dart';
 import 'package:ezskool/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
@@ -15,8 +15,7 @@ import 'class_attendance_status.dart';
 // Adjust import path as needed
 
 class ClassAttendanceStatusSpecificIntervalScreen extends StatefulWidget {
-  const ClassAttendanceStatusSpecificIntervalScreen({Key? key})
-      : super(key: key);
+  const ClassAttendanceStatusSpecificIntervalScreen({super.key});
 
   @override
   State<ClassAttendanceStatusSpecificIntervalScreen> createState() =>
@@ -100,13 +99,6 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                     DateFormat('dd-MM-yyyy').format(selectedDateFrom!);
               });
 
-              // Reopen the filter dialog after date selection
-              //Navigator.pop(context);
-              //Navigator.pop(context);
-              // _showFilterDialog();
-              // Log.d('filter dialog opened');
-              // _showFilterDialog();
-
               if (isOnly) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _showFilterDialog();
@@ -138,7 +130,8 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
           ),
           child: CalendarBottomSheet(
             hintText: 'Select Ending Date',
-            initialDate: selectedDateTo ?? DateTime.now(),
+            initialDate: selectedDateTo ?? selectedDateFrom ?? DateTime.now(),
+            minimumDate: selectedDateFrom,
             onDateSelected: (newDate) {
               setState(() {
                 selectedDateTo = newDate;
@@ -195,6 +188,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 SelectorWidget(
+                  hint: 'From',
                   text: formattedDateFrom ?? 'From',
                   leadingIcon: Icons.date_range,
                   onTap: () {
@@ -204,6 +198,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                 ),
                 SizedBox(height: 16.h),
                 SelectorWidget(
+                  hint: 'To',
                   text: formattedDateTo ?? 'To',
                   leadingIcon: Icons.date_range,
                   onTap: () {
@@ -213,6 +208,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                 ),
                 SizedBox(height: 16.h),
                 SelectorWidget(
+                  hint: 'Selected Class',
                   text: selectedCls ?? 'Selected Class',
                   leadingIcon: Icons.class_outlined,
                   onTap: () {
@@ -236,6 +232,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                       backgroundColor: const Color(0xFFF5F5F5),
                       textColor: Color(0xFF494949),
                       onPressed: () {
+                        HapticFeedback.lightImpact();
                         Navigator.of(context).pop();
                       },
                     ),
@@ -247,17 +244,29 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                       backgroundColor: const Color(0xFFED7902),
                       textColor: Colors.white,
                       onPressed: () {
-                        // setState(() {
-                        //   isLoadingMain = true;
-                        // });
-                        // // startShowing(context);
-                        // fetchAttendanceData(
-                        //     DateFormat('yyyy-MM-dd').format(selectedDate!),
-                        //     shiftValues[selectedShift] ?? '1');
-                        // stopShowing(context);
+                        HapticFeedback.heavyImpact();
+                        if (selectedClassId != null &&
+                            selectedDateFrom != null &&
+                            selectedDateTo != null) {
+                          setState(() {
+                            isLoadingMain = true;
+                          });
 
-                        Log.d('Selected class: $selectedCls');
-
+                          // Call the new API with selected class and dates
+                          fetchClassAttendanceSummary(
+                            selectedClassId.toString(),
+                            DateFormat('yyyy-MM-dd').format(selectedDateFrom!),
+                            DateFormat('yyyy-MM-dd').format(selectedDateTo!),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text("Please select class and date range"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                         Navigator.of(context).pop();
                       },
                     ),
@@ -274,55 +283,83 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
     );
   }
 
-  Future<void> fetchAttendanceData(String date, String shift) async {
+  Future<void> fetchClassAttendanceSummary(
+      String classId, String dateFrom, String dateTo) async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      final apiData = await stRepo.fetchClassAttendanceReport(shift, date);
+      final apiData =
+          await stRepo.fetchClassAttendanceSummary(classId, dateFrom, dateTo);
 
-      Log.d(apiData);
-
-      List<AttendanceData> newData = [];
+      Log.d('Class attendance summary: $apiData');
 
       // Process the API response
-      for (var item in apiData) {
-        int classId = item['class_id'];
-        String className = item['class_name'];
-        String? att = item['att'];
+      if (apiData != null && apiData['class_id'] != null) {
+        String className = apiData['class_name'] ?? '';
+        List<dynamic> attendanceList = apiData['attendance'] ?? [];
 
-        // Parse attendance data if available
-        int present = 0;
-        int absent = 0;
-        int total = 0;
+        List<AttendanceData> newData = [];
 
-        if (att != null && att.isNotEmpty) {
-          List<String> parts = att.split(',');
-          if (parts.length >= 3) {
-            present = int.tryParse(parts[0]) ?? 0;
-            absent = int.tryParse(parts[1]) ?? 0;
-            total = int.tryParse(parts[2]) ?? 0;
+        // Process each day's attendance data
+        for (var item in attendanceList) {
+          String date = item['dt'] ?? '';
+          String? att = item['att'];
+
+          // Parse attendance data if available
+          int present = 0;
+          int absent = 0;
+          int total = 0;
+
+          if (att != null && att.isNotEmpty) {
+            List<String> parts = att.split(',');
+            if (parts.length >= 3) {
+              present = int.tryParse(parts[0]) ?? 0;
+              absent = int.tryParse(parts[1]) ?? 0;
+              total = int.tryParse(parts[2]) ?? 0;
+            }
           }
+
+          // Format the date for display
+          DateTime dateObj = DateTime.parse(date);
+          String displayDate = DateFormat('dd-MM-yyyy').format(dateObj);
+
+          Log.d('Date: $displayDate, Present: $present, Absent: $absent');
+
+          newData.add(AttendanceData(
+            className: displayDate, // Using date as the row identifier
+            present: att != null ? present : -1,
+            absent: att != null ? absent : -1,
+            total: att != null ? total : -1,
+          ));
         }
 
-        newData.add(AttendanceData(
-          className: className,
-          present: att != null ? present : -1,
-          absent: att != null ? absent : -1,
-          total: att != null ? total : -1,
-        ));
-      }
+        setState(() {
+          attendanceData = newData;
+          isLoading = false;
+          isLoadingMain = false;
+        });
+      } else {
+        // Handle empty or invalid response
+        setState(() {
+          attendanceData = [];
+          isLoading = false;
+          isLoadingMain = false;
+        });
 
-      setState(() {
-        attendanceData = newData;
-        isLoading = false;
-        isLoadingMain = false;
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("No attendance data found for selected period"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
+      Log.d('Error fetching attendance summary: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Error loading attendance data: No classes found"),
+          content: Text("Error loading attendance data"),
           duration: Duration(seconds: 3),
           backgroundColor: Colors.red,
         ),
@@ -331,6 +368,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
       setState(() {
         attendanceData = [];
         isLoading = false;
+        isLoadingMain = false;
       });
     }
   }
@@ -357,13 +395,15 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
           },
         ),
       ),
-      child: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            physics: ClampingScrollPhysics(),
             children: [
               SizedBox(height: 15.h),
               Text(
+                textAlign: TextAlign.center,
                 "Class Attendance Over a Period",
                 style: TextStyle(
                   fontSize: 16.sp,
@@ -371,7 +411,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                   color: Color(0xFF494949),
                 ),
               ),
-              SizedBox(height: 15.h),
+              SizedBox(height: 10.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: SizedBox(
@@ -385,9 +425,9 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                           Icon(
                             Icons.date_range,
                             size: 20.w,
-                            color: const Color(0xFFB8BCCA),
+                            color: const Color(0xFF494949),
                           ),
-                          SizedBox(width: 8.w),
+                          SizedBox(width: 4.w),
                           Text(
                             // DateFormat('EEE, dd MMM, yyyy')
                             //     .format(selectedDateFrom ?? ),
@@ -396,14 +436,14 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                               fontWeight: FontWeight.w500,
                               fontSize: 14.sp,
                               height: 1.5,
-                              color: const Color(0xFF969AB8),
+                              color: const Color(0xFF494949),
                             ),
                           ),
                         ],
                       ),
 
                       // Spacer between date and class
-                      SizedBox(width: 24.w),
+                      SizedBox(width: 16.w),
 
                       // Class section
                       Row(
@@ -411,7 +451,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                           Icon(
                             Icons.class_outlined,
                             size: 20.w,
-                            color: const Color(0xFFB8BCCA),
+                            color: const Color(0xFF494949),
                           ),
                           SizedBox(width: 8.w),
                           Text(
@@ -420,7 +460,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                               fontWeight: FontWeight.w500,
                               fontSize: 14.sp,
                               height: 1.5,
-                              color: const Color(0xFF969AB8),
+                              color: const Color(0xFF494949),
                             ),
                           ),
                         ],
@@ -429,8 +469,17 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                   ),
                 ),
               ),
-              SizedBox(height: 15.h),
+              SizedBox(height: 5.h),
+              Divider(
+                // indent: 20.w,
+                // endIndent: 20.w,
+                color: Colors.grey[400],
+                thickness: 1,
+                height: 1.h,
+              ),
+              SizedBox(height: 8.h),
               SizedBox(
+                //height: 570.h,
                 child: isLoadingMain
                     ? Center(
                         child: CircularProgressIndicator(
@@ -438,27 +487,54 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                       ))
                     : ClassAttendanceSummary(
                         attendanceData: attendanceData,
+                        onButtonPressed: _showFilterDialog,
                       ),
               ),
-              if (isLoading) ...[
-                SizedBox(height: 540.h),
-              ] else ...[
-                SizedBox(height: 2.h),
-              ],
-              TextButton(
-                onPressed: _showFilterDialog,
-                child: Text(
-                  "Change Date/Class",
-                  style: TextStyle(
-                    color: Color(0xFFED7902),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              // if (isLoading) ...[
+              //   SizedBox(height: 540.h),
+              // ] else ...[
+              //   SizedBox(height: 2.h),
+              // ],
+              //SizedBox(height: 2.h),
             ],
           ),
         ),
-      ),
+
+        //Spacer(),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          color: Colors.grey[400],
+          thickness: 1,
+          height: 1.h,
+        ),
+        Padding(
+          padding: EdgeInsets.only(bottom: 10.h, top: 10.h),
+          child: TextButton(
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              _showFilterDialog();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFFED7902),
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                side: BorderSide(color: Colors.grey.shade100, width: 1.0),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              "Change Date/Class",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        )
+      ]),
     );
   }
 
@@ -472,7 +548,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
 
     String? tempStandard = viewModel.selectedStandard;
     String? tempDivision = viewModel.selectedDivision;
-    String? tempClass = selectedCls;
+    String? tempClass = '';
 
     showModalBottomSheet(
       context: context,
@@ -482,7 +558,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
           return GestureDetector(
             onTap: () {},
             child: Container(
-              height: 550.h,
+              height: 520.h,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(36.r),
@@ -492,33 +568,42 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
               ),
               child: Column(
                 children: [
-                  SizedBox(height: 13.h),
-                  Container(
-                    height: 4.h,
-                    width: 164.w,
-                    decoration: BoxDecoration(
-                      color: Color(0xFFD9D9D9),
-                      borderRadius: BorderRadius.circular(22.r),
+                  SizedBox(height: 20.h),
+                  // Container(
+                  //   height: 4.h,
+                  //   width: 164.w,
+                  //   decoration: BoxDecoration(
+                  //     color: Color(0xFFD9D9D9),
+                  //     borderRadius: BorderRadius.circular(22.r),
+                  //   ),
+                  // ),
+                  Text(
+                    'Select Class',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16.sp,
+                      height: 1.5.h,
+                      color: Color(0xFFA29595),
                     ),
                   ),
-                  SizedBox(height: 20.h),
+
+                  SizedBox(height: 13.h),
 
                   SizedBox(
                       // height: 450.h,
                       // width: double.infinity.w,
                       child: Column(children: [
-                    Text(
-                      'Select Class',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16.sp,
-                        height: 1.5.h,
-                        color: Color(0xFFA29595),
-                      ),
+                    Divider(
+                      indent: 20.w,
+                      endIndent: 20.w,
+                      color: Colors.grey[400],
+                      thickness: 1,
+                      height: 1.h,
                     ),
                     // SizedBox(height: 20),
                     Padding(
-                      padding: EdgeInsets.all(32.r),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 32.w, vertical: 16.h),
                       child: GridView.builder(
                         shrinkWrap: true,
                         physics: AlwaysScrollableScrollPhysics(),
@@ -636,7 +721,7 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                   ])),
 
                   SizedBox(
-                    height: 15.h,
+                    height: 30.h,
                   ),
 
                   Divider(
@@ -648,7 +733,8 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
                   ),
                   // SizedBox(height: 5,),
                   Padding(
-                    padding: EdgeInsets.all(16.r),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.r, vertical: 10.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -762,36 +848,57 @@ class _ClassAttendanceStatusSpecificIntervalScreenState
 
 class ClassAttendanceSummary extends StatelessWidget {
   final List<AttendanceData> attendanceData;
+  final VoidCallback? onButtonPressed;
 
   const ClassAttendanceSummary({
-    Key? key,
+    super.key,
     required this.attendanceData,
-  }) : super(key: key);
+    required this.onButtonPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 348.w,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4.r),
-        border: Border.all(color: const Color(0xFFDADADA), width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8.8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // Add this to prevent unbounded height
-        children: [
-          _buildHeader(),
-          _buildTable(), // Remove the Expanded wrapper
-        ],
-      ),
-    );
+        width: 348.w,
+        //height: 570.h,
+        constraints: BoxConstraints(
+          maxHeight: 560.h, // Maximum height constraint
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(4.r),
+          border: Border.all(color: const Color(0xFFDADADA), width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8.8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment
+              .stretch, // Add this to prevent unbounded height
+          children: [
+            _buildHeader(),
+            Flexible(
+              // Wrap the data table in an Expanded to take remaining space
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                // Make only the data table scrollable
+                child: SizedBox(
+                  // Match the width of the parent
+                  width: 348.w,
+                  child: _buildTable(),
+                ),
+              ),
+            ),
+          ],
+          // IntrinsicHeight(
+          //   child:
+          //),
+        ));
   }
 
   Widget _buildHeader() {
@@ -853,8 +960,7 @@ class ClassAttendanceSummary extends StatelessWidget {
       child: Row(
         children: [
           _buildTableCell(
-            // data.className.replaceAll('-', ' '),
-            '',
+            data.className,
             flex: 2,
           ),
           _buildVerticalDivider(),

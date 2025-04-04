@@ -4,6 +4,12 @@ description: "A new Flutter project."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
+# Use below version for this project
+# Flutter 3.29.0 • channel stable • https://github.com/flutter/flutter.git
+# Framework • revision 35c388afb5 (7 weeks ago) • 2025-02-10 12:48:41 -0800
+# Engine • revision f73bfc4522
+# Tools • Dart 3.7.0 • DevTools 2.42.2
+
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
 # followed by an optional build number separated by a +.
@@ -16,7 +22,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+2
+version: 1.0.0+7
+# ezs_0204_2
 
 environment:
   sdk: ^3.6.0
@@ -58,6 +65,7 @@ dependencies:
   url_launcher: ^6.3.1
   file_picker: ^9.0.0
   dropdown_button2: ^2.3.9
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
